@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <cmath>
+#include "util.h"
 using namespace std;
 
 Kernel::Kernel()

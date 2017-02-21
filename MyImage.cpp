@@ -1,4 +1,5 @@
 #include "MyImage.h"
+#include <QDir>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -118,7 +119,8 @@ bool MyImage::save(const QString filename) const {
             qImage.setPixel(j, i, qRgb(color, color, color));
         }
     }
-    return qImage.save(QGuiApplication::applicationDirPath() + "\images\ " + filename, "jpg");
+    QDir dir ("../images");
+    return qImage.save(dir.absoluteFilePath(filename), "jpg");
 }
 
 MyImage& MyImage::operator=(MyImage &&other) {

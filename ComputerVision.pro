@@ -3,7 +3,6 @@
 # Project created by QtCreator 2017-02-16T12:09:20
 #
 #-------------------------------------------------
-CONFIG   += c++11
 CONFIG   += c++14
 QT       += core gui
 
@@ -20,7 +19,8 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     MyImage.h \
-    kernel.h
+    kernel.h \
+    util.h
 
 FORMS    += mainwindow.ui
 

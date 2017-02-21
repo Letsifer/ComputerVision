@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "MyImage.h"
+#include <QDir>
 #include "ui_mainwindow.h"
 #include <iostream>
 #include <memory>
@@ -11,7 +12,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QPixmap pix("C://QtProjects//ComputerVision//images//wall.jpg");
+    QDir dir ("../ComputerVision/images");
+    QDir().mkdir("../images");
+    //cout << dir.absoluteFilePath("wall.jpg").toStdString() << endl;
+    QPixmap pix(dir.absoluteFilePath("wall.jpg"));
     ui->imageLabel->setPixmap(pix);
 
 
@@ -36,7 +40,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     unique_ptr<MyImage> resultGaussLab1 = convoltGaussX->countHypotenuse(*convoltGaussY)->normalize();
     resultGaussLab1->save("lab1GaussResult.jpg");
-    ui->label->setText(QGuiApplication::applicationDirPath() + "\images\ - all images are there");
+
+    QDir dir2 ("../images");
+    ui->label->setText(dir2.absolutePath().append(" - all images are there"));
     ui->labelSigma->setText(QString::fromStdString("sigma is " + to_string(sigma)));
     ui->imageResult->setPixmap(QPixmap::fromImage(resultGaussLab1->createQImageFromImage()));
 }
