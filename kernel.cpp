@@ -5,6 +5,17 @@
 #include "util.h"
 using namespace std;
 
+constexpr static double VERTICAL_KERNEL[9] = {
+    -1, 0, 1,
+    -2, 0, 2,
+    -1, 0, 1
+};
+constexpr static double HORIZONTAL_KERNEL[9] = {
+    -1, -2, -1,
+     0,  0,  0,
+     1,  2,  1
+};
+
 Kernel::Kernel()
 {
 
@@ -27,30 +38,19 @@ void Kernel::setElement(int i, int j, double value){
 
 unique_ptr<Kernel> Kernel::createXSobelKernel() {
     unique_ptr<Kernel> kernel = make_unique<Kernel>(3, 3);
-    double kernelInArray[9] = {
-        -1, 0, 1,
-        -2, 0, 2,
-        -1, 0, 1
-    };
-    copy(begin(kernelInArray), end(kernelInArray), kernel->kernel.get());
+    copy(begin(VERTICAL_KERNEL), end(VERTICAL_KERNEL), kernel->kernel.get());
     return kernel;
 }
 
 unique_ptr<Kernel> Kernel::createYSobelKernel() {
     unique_ptr<Kernel> kernel = make_unique<Kernel>(3, 3);
-    double kernelInArray[9] = {
-        -1, -2, -1,
-         0,  0,  0,
-         1,  2,  1
-    };
-    copy(begin(kernelInArray), end(kernelInArray), kernel->kernel.get());
+    copy(begin(HORIZONTAL_KERNEL), end(HORIZONTAL_KERNEL), kernel->kernel.get());
     return kernel;
 }
 
 unique_ptr<Kernel> Kernel::createYGaussKernel(const double sigma) {
     const double denominator = sqrt(2 * M_PI * sigma), sigmaSqr = 2 * sigma * sigma;
-    int k = (int) round(3 * sigma);
-    int size = k * 2 + 1;
+    const int k = (int) round(3 * sigma), size = k * 2 + 1;
     unique_ptr<Kernel> kernel = make_unique<Kernel>(size, 1);
     for (int i = 0; i < size; i++) {
         int x = i - k;
@@ -62,8 +62,7 @@ unique_ptr<Kernel> Kernel::createYGaussKernel(const double sigma) {
 
 unique_ptr<Kernel> Kernel::createXGaussKernel(const double sigma) {
     const double denominator = sqrt(2 * M_PI * sigma), sigmaSqr = 2 * sigma * sigma;
-    int k = (int) round(3 * sigma);
-    int size = k * 2 + 1;
+    const int k = (int) round(3 * sigma), size = k * 2 + 1;
     unique_ptr<Kernel> kernel = make_unique<Kernel>(1, size);
     for (int i = 0; i < size; i++) {
         int x = i - k;

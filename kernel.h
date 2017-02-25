@@ -9,7 +9,6 @@ class Kernel
     int width, height;
     unique_ptr<double[]> kernel;
     void setElement(int i, int j, double value);
-    bool separable; //use this flag to make separable convolution
 public:
     Kernel();
     Kernel(int height, int width);

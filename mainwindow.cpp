@@ -14,31 +14,30 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QDir dir ("../ComputerVision/images");
     QDir().mkdir("../images");
-    //cout << dir.absoluteFilePath("wall.jpg").toStdString() << endl;
     QPixmap pix(dir.absoluteFilePath("wall.jpg"));
     ui->imageLabel->setPixmap(pix);
 
 
     QImage image = pix.toImage();
-    unique_ptr<MyImage> mine = make_unique<MyImage>(image.height(), image.width(), image);
+    auto mine = MyImage::createMyImageFromQImage(image);
 
-    unique_ptr<MyImage> convoltY = mine->convoluton(*Kernel::createYSobelKernel(), BorderType::MirrorBorder)->normalize();
-    unique_ptr<MyImage> convoltX = mine->convoluton(*Kernel::createXSobelKernel(), BorderType::MirrorBorder)->normalize();
+    auto convoltY = mine->convoluton(Kernel::createYSobelKernel().get(), BorderType::CopyBorder)->normalize(0, 1);
+    auto convoltX = mine->convoluton(Kernel::createXSobelKernel().get(), BorderType::CopyBorder)->normalize(0, 1);;
     convoltX->save("lab1SobelX.jpg");
     convoltY->save("lab1SobelY.jpg");
 
-    unique_ptr<MyImage> resultSobelLab1 = convoltX->countHypotenuse(*convoltY)->normalize();
+    auto resultSobelLab1 = convoltX->countHypotenuse(convoltY.get())->normalize(0, 1);;
     resultSobelLab1->save("lab1SobelResult.jpg");
 
     ui->imageLabel->setPixmap(QPixmap::fromImage(resultSobelLab1->createQImageFromImage()));
 
     double sigma = 5;
-    unique_ptr<MyImage> convoltGaussY = mine->convoluton(*Kernel::createYGaussKernel(sigma), BorderType::MirrorBorder)->normalize();
-    unique_ptr<MyImage> convoltGaussX = mine->convoluton(*Kernel::createXGaussKernel(sigma), BorderType::MirrorBorder)->normalize();
+    auto convoltGaussY = mine->convoluton(Kernel::createYGaussKernel(sigma).get(), BorderType::CopyBorder)->normalize(0, 1);;
+    auto convoltGaussX = mine->convoluton(Kernel::createXGaussKernel(sigma).get(), BorderType::CopyBorder)->normalize(0, 1);;
     convoltGaussX->save("lab1GaussX.jpg");
     convoltGaussY->save("lab1GaussY.jpg");
 
-    unique_ptr<MyImage> resultGaussLab1 = convoltGaussX->countHypotenuse(*convoltGaussY)->normalize();
+    auto resultGaussLab1 = convoltGaussX->countHypotenuse(convoltGaussY.get())->normalize(0, 1);;
     resultGaussLab1->save("lab1GaussResult.jpg");
 
     QDir dir2 ("../images");

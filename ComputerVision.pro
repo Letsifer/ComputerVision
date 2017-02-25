@@ -19,8 +19,7 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     MyImage.h \
-    kernel.h \
-    util.h
+    kernel.h
 
 FORMS    += mainwindow.ui
 
