@@ -22,22 +22,22 @@ MainWindow::MainWindow(QWidget *parent) :
     auto mine = MyImage::createMyImageFromQImage(image);
 
     auto convoltY = mine->convoluton(Kernel::createYSobelKernel().get(), BorderType::CopyBorder)->normalize(0, 1);
-    auto convoltX = mine->convoluton(Kernel::createXSobelKernel().get(), BorderType::CopyBorder)->normalize(0, 1);;
+    auto convoltX = mine->convoluton(Kernel::createXSobelKernel().get(), BorderType::CopyBorder)->normalize(0, 1);
     convoltX->save("lab1SobelX.jpg");
     convoltY->save("lab1SobelY.jpg");
 
-    auto resultSobelLab1 = convoltX->countHypotenuse(convoltY.get())->normalize(0, 1);;
+    auto resultSobelLab1 = convoltX->countHypotenuse(convoltY.get());
     resultSobelLab1->save("lab1SobelResult.jpg");
 
     ui->imageLabel->setPixmap(QPixmap::fromImage(resultSobelLab1->createQImageFromImage()));
 
     double sigma = 5;
-    auto convoltGaussY = mine->convoluton(Kernel::createYGaussKernel(sigma).get(), BorderType::CopyBorder)->normalize(0, 1);;
-    auto convoltGaussX = mine->convoluton(Kernel::createXGaussKernel(sigma).get(), BorderType::CopyBorder)->normalize(0, 1);;
+    auto convoltGaussY = mine->convoluton(Kernel::createYGaussKernel(sigma).get(), BorderType::CopyBorder)->normalize(0, 1);
+    auto convoltGaussX = mine->convoluton(Kernel::createXGaussKernel(sigma).get(), BorderType::CopyBorder)->normalize(0, 1);
     convoltGaussX->save("lab1GaussX.jpg");
     convoltGaussY->save("lab1GaussY.jpg");
 
-    auto resultGaussLab1 = convoltGaussX->countHypotenuse(convoltGaussY.get())->normalize(0, 1);;
+    auto resultGaussLab1 = convoltGaussX->countHypotenuse(convoltGaussY.get());
     resultGaussLab1->save("lab1GaussResult.jpg");
 
     QDir dir2 ("../images");

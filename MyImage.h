@@ -37,8 +37,8 @@ public:
     unique_ptr<MyImage> convoluton(const Kernel* kernel, BorderType borderType);
     shared_ptr<MyImage> normalize(double newMin, double newMax);
     unique_ptr<MyImage> countHypotenuse(const MyImage* other);
-    bool save(const QString filename) const;
-    QImage createQImageFromImage() const;
+    bool save(const QString filename);
+    QImage createQImageFromImage();
 };
 
 #endif // IMAGE_H

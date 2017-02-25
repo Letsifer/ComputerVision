@@ -121,11 +121,12 @@ unique_ptr<MyImage> MyImage::countHypotenuse(const MyImage* other) {
    return result;
 }
 
-bool MyImage::save(const QString filename) const {
+bool MyImage::save(const QString filename) {
     QImage qImage = QImage(width, height, QImage::Format_RGB32);
+    auto normalized = this->normalize(0, 255);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            int color = (int)(getPixel(i, j) * 255.);
+            int color = (int)(normalized -> getPixel(i, j) * 255.);
             qImage.setPixel(j, i, qRgb(color, color, color));
         }
     }
@@ -133,11 +134,12 @@ bool MyImage::save(const QString filename) const {
     return qImage.save(dir.absoluteFilePath(filename), "jpg");
 }
 
-QImage MyImage::createQImageFromImage() const{
+QImage MyImage::createQImageFromImage(){
     QImage image = QImage(width, height, QImage::Format_RGB32);
+    auto normalized = this->normalize(0, 255);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            int color = (int)(getPixel(i, j) * 255.);
+            int color = (int)(normalized -> getPixel(i, j));
             image.setPixel(j, i, qRgb(color, color, color));
         }
     }
