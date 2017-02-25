@@ -126,7 +126,7 @@ bool MyImage::save(const QString filename) {
     auto normalized = this->normalize(0, 255);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            int color = (int)(normalized -> getPixel(i, j) * 255.);
+            int color = (int)(normalized -> getPixel(i, j));
             qImage.setPixel(j, i, qRgb(color, color, color));
         }
     }
