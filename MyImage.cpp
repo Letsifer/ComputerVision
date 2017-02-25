@@ -113,13 +113,6 @@ double MyImage::convertToAnotherRange(double value, double oldMin, double newMin
 
 unique_ptr<MyImage> MyImage::countHypotenuse(const MyImage* other) {
    unique_ptr<MyImage> result = make_unique<MyImage>(height, width);
-//   for (int i = 0; i < height; i++) {
-//       for (int j = 0; j < width; j++) {
-//           double value1 = getPixel(i, j),
-//                  value2 = other->getPixel(i, j);
-//           result->setPixel(i, j, sqrt(value1 * value1 + value2 * value2));
-//       }
-//   }
    transform(
                &pixels[0], &pixels[width * height],
                &other->pixels[0], &result->pixels[0],
