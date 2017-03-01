@@ -16,7 +16,7 @@ class MyImage
     unique_ptr<double[]> pixels;
     void setPixel(int i, int j, double value);
     double getBorderPixel(int i, int j, const BorderType borderType) const;
-    double pixelConvolution(int y, int x, const Kernel* kernel, const BorderType borderType) const;
+    double pixelConvolution(int y, int x, const Kernel& kernel, const BorderType borderType) const;
     bool isXInRange(int value) const{
         return value >= 0 && value < width;
     }
@@ -26,17 +26,17 @@ class MyImage
     bool areNotInRange(int x, int y) const{
         return !isXInRange(x) || !isYInRange(y);
     }
-    double convertToAnotherRange(double value, double oldMin, double newMin, double coefficient);
+    double convertToAnotherRange(double value, double oldMin, double newMin, double coefficient) const;
 
 
 public:
-    static unique_ptr<MyImage> createMyImageFromQImage(const QImage qImage);
+    static MyImage createMyImageFromQImage(const QImage qImage);
     MyImage();
     MyImage(int height, int width);
     double getPixel(int i, int j) const;
-    unique_ptr<MyImage> convoluton(const Kernel* kernel, BorderType borderType);
-    shared_ptr<MyImage> normalize(double newMin, double newMax);
-    unique_ptr<MyImage> countHypotenuse(const MyImage* other);
+    MyImage convoluton(const Kernel& kernel, BorderType borderType) const;
+    MyImage normalize(double newMin, double newMax) const;
+    MyImage countHypotenuse(const MyImage& other) const;
     bool save(const QString filename);
     QImage createQImageFromImage();
 };

@@ -11,16 +11,16 @@ MyImage::MyImage()
     pixels = nullptr;
 }
 
-unique_ptr<MyImage> MyImage::createMyImageFromQImage(const QImage qImage) {
+MyImage MyImage::createMyImageFromQImage(const QImage qImage) {
     const int height = qImage.height(), width = qImage.width();
-    unique_ptr<MyImage> result = make_unique<MyImage>(height, width);
+    MyImage result = MyImage(height, width);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             const QRgb rgb = qImage.pixel(j, i);
             double red = qRed(rgb) * 0.299,
                    green = qGreen(rgb) * 0.587,
                     blue = qBlue(rgb) * 0.114;
-            result->setPixel(i, j, red + green + blue);
+            result.setPixel(i, j, red + green + blue);
         }
     }
     return result;
@@ -41,21 +41,21 @@ double MyImage::getPixel(int i, int j) const{
     return pixels[i * width + j];
 }
 
-unique_ptr<MyImage> MyImage::convoluton(const Kernel* kernel, const BorderType borderType) {
-    unique_ptr<MyImage> result = make_unique<MyImage>(height, width);
+MyImage MyImage::convoluton(const Kernel& kernel, const BorderType borderType) const{
+    MyImage result = MyImage(height, width);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             double value = pixelConvolution(i, j, kernel, borderType);
-            result->setPixel(i, j, value);
+            result.setPixel(i, j, value);
         }
     }
     return result;
 }
 
-double MyImage::pixelConvolution(int y, int x, const Kernel* kernel, const BorderType borderType) const{
+double MyImage::pixelConvolution(int y, int x, const Kernel& kernel, const BorderType borderType) const{
     double result = 0;
-    int rangeX = kernel->getKernelHalfWidth();
-    int rangeY = kernel->getKernelHalfHeight();
+    int rangeX = kernel.getKernelHalfWidth();
+    int rangeY = kernel.getKernelHalfHeight();
     for (int i = -rangeY; i <= rangeY; i++) {
         int currentY = y + i;
         for (int j = -rangeX; j <= rangeX; j++) {
@@ -64,7 +64,7 @@ double MyImage::pixelConvolution(int y, int x, const Kernel* kernel, const Borde
             double pixelResult = areNotInRangeValue
                     ? getBorderPixel(currentY, currentX, borderType)
                     : getPixel(currentY, currentX);
-            result += pixelResult * kernel->getElementInRelationToCenter(j, i);
+            result += pixelResult * kernel.getElementInRelationToCenter(j, i);
         }
     }
     return result;
@@ -88,9 +88,9 @@ double MyImage::getBorderPixel(int i, int j, const BorderType borderType) const{
     return -1.0;
 }
 
-shared_ptr<MyImage> MyImage::normalize(double newMin, double newMax) {
+MyImage MyImage::normalize(double newMin, double newMax) const{
     const double newRange = newMax - newMin;
-    shared_ptr<MyImage> result = make_shared<MyImage>(height, width);
+    MyImage result = MyImage(height, width);
 
     auto minmax = minmax_element(&pixels[0], &pixels[width * height]);
     const double minBorder = *minmax.first, maxBorder = *minmax.second;
@@ -101,21 +101,21 @@ shared_ptr<MyImage> MyImage::normalize(double newMin, double newMax) {
     const double coefficient = newRange / range;
     transform(
                 &pixels[0], &pixels[width * height],
-                &result->pixels[0],
+                &result.pixels[0],
                 [=](double value){return convertToAnotherRange(value, minBorder, newMin, coefficient);}
             );
     return result;
 }
 
-double MyImage::convertToAnotherRange(double value, double oldMin, double newMin, double coefficient) {
+double MyImage::convertToAnotherRange(double value, double oldMin, double newMin, double coefficient) const{
     return newMin + coefficient * (value - oldMin);
 }
 
-unique_ptr<MyImage> MyImage::countHypotenuse(const MyImage* other) {
-   unique_ptr<MyImage> result = make_unique<MyImage>(height, width);
+MyImage MyImage::countHypotenuse(const MyImage& other) const{
+   MyImage result = MyImage(height, width);
    transform(
                &pixels[0], &pixels[width * height],
-               &other->pixels[0], &result->pixels[0],
+               &other.pixels[0], &result.pixels[0],
                [=](double value1, double value2){return sqrt(value1 * value1 + value2 * value2);}
            );
    return result;
@@ -126,7 +126,7 @@ bool MyImage::save(const QString filename) {
     auto normalized = this->normalize(0, 255);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            int color = (int)(normalized -> getPixel(i, j));
+            int color = (int)(normalized.getPixel(i, j));
             qImage.setPixel(j, i, qRgb(color, color, color));
         }
     }
@@ -139,7 +139,7 @@ QImage MyImage::createQImageFromImage(){
     auto normalized = this->normalize(0, 255);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            int color = (int)(normalized -> getPixel(i, j));
+            int color = (int)(normalized.getPixel(i, j));
             image.setPixel(j, i, qRgb(color, color, color));
         }
     }

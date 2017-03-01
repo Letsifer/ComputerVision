@@ -24,11 +24,11 @@ public:
         return getElement(getKernelHalfHeight() + pushY, getKernelHalfWidth() + pushX);
     }
 
-    static unique_ptr<Kernel> createXSobelKernel();
-    static unique_ptr<Kernel> createYSobelKernel();
+    static Kernel createXSobelKernel();
+    static Kernel createYSobelKernel();
 
-    static unique_ptr<Kernel> createXGaussKernel(const double sigma);
-    static unique_ptr<Kernel> createYGaussKernel(const double sigma);
+    static Kernel createXGaussKernel(const double sigma);
+    static Kernel createYGaussKernel(const double sigma);
 };
 
 #endif // KERNEL_H
