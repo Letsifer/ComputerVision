@@ -17,15 +17,6 @@ struct PyramidElement {
         this->image = image;
         this->currentSigma = sigma;
     }
-
-//    PyramidElement& operator=(PyramidElement& sample) {
-//        if (this == &sample) {
-//            return *this;
-//        }
-//        currentSigma = sample.currentSigma;
-//        image = sample.image;
-//        return *this;
-//    }
 };
 
 class Pyramid
