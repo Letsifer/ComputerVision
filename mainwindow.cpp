@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "MyImage.h"
+#include "pyramid.h"
 #include <QDir>
 #include "ui_mainwindow.h"
 #include <iostream>
@@ -7,6 +8,7 @@
 using namespace std;
 
 void MainWindow::lab1() {
+    //need 4 labels
     QDir dir ("../ComputerVision/images");
     QDir().mkdir("../images");
     QPixmap pix(dir.absoluteFilePath("wall.jpg"));
@@ -41,12 +43,26 @@ void MainWindow::lab1() {
     ui->imageResult->setPixmap(QPixmap::fromImage(resultGaussLab1.createQImageFromImage()));
 }
 
+void MainWindow::lab2() {
+    QDir dir ("../ComputerVision/images");
+    QDir().mkdir("../images");
+    QPixmap pix(dir.absoluteFilePath("wall.jpg"));
+    QImage image = pix.toImage();
+    auto mine = MyImage::createMyImageFromQImage(image);
+    const int scalesInOctave = 3, octaves = 3;
+    const double basicSigma = 2;
+    Pyramid pyramid = Pyramid::buildPyramid(mine, basicSigma, octaves, scalesInOctave);
+    pyramid.savePyramid(QString::fromStdString("lab2-"));
+    QDir dir2 ("../images");
+    ui->label->setText(dir2.absolutePath().append(" - all images are there"));
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    lab1();
+    lab2();
 
 }
 

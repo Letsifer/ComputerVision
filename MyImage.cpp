@@ -33,6 +33,17 @@ MyImage::MyImage(int height, int width)
     pixels = make_unique<double[]>((size_t) (width * height));
 }
 
+MyImage::MyImage(const MyImage &sample) {
+    this->height = sample.height;
+    this->width = sample.width;
+    pixels = make_unique<double[]>((size_t) (width * height));
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            setPixel(i, j, sample.getPixel(i, j));
+        }
+    }
+}
+
 void MyImage::setPixel(int i, int j, double value) {
     pixels[i * width + j] = value;
 }
@@ -141,6 +152,20 @@ QImage MyImage::createQImageFromImage(){
         for (int j = 0; j < width; j++) {
             int color = (int)(normalized.getPixel(i, j));
             image.setPixel(j, i, qRgb(color, color, color));
+        }
+    }
+    return image;
+}
+
+MyImage MyImage::divideImage() const{
+    const int newWidth = width / 2, newHeight = height / 2;
+    MyImage image = MyImage(newHeight, newWidth);
+    for (int i = 0; i < height; i+=2) {
+        for (int j = 0; j < width; j+=2) {
+            double value =
+                    getPixel(i, j) + getPixel(i + 1, j) +
+                    getPixel(i, j + 1) + getPixel(i + 1, j + 1);
+            image.setPixel(i / 2, j / 2, value / 4);
         }
     }
     return image;

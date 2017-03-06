@@ -14,6 +14,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     void lab1();
+    void lab2();
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();

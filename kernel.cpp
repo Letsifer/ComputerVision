@@ -70,3 +70,20 @@ Kernel Kernel::createXGaussKernel(const double sigma) {
     }
     return kernel;
 }
+
+Kernel Kernel::createGaussKernel(const double sigma) {
+    const double denominator = 2 * M_PI * sigma * sigma, sigmaSqr = 2 * sigma * sigma;
+    const int k = (int) round(3 * sigma), size = k * 2 + 1;
+    Kernel kernel = Kernel(size, size);
+    for (int i = 0; i < size; i++) {
+        int y = i - k;
+        y *= y;
+        for (int j = 0; j < size; j++) {
+            int x = j - k;
+            x *= x;
+            double value = exp(- (x + y) / sigmaSqr) / denominator;
+            kernel.setElement(i, j, value);
+        }
+    }
+    return kernel;
+}

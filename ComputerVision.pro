@@ -15,11 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     MyImage.cpp \
-    kernel.cpp
+    kernel.cpp \
+    pyramid.cpp
 
 HEADERS  += mainwindow.h \
     MyImage.h \
-    kernel.h
+    kernel.h \
+    pyramid.h
 
 FORMS    += mainwindow.ui
 

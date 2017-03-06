@@ -29,6 +29,7 @@ public:
 
     static Kernel createXGaussKernel(const double sigma);
     static Kernel createYGaussKernel(const double sigma);
+    static Kernel createGaussKernel(const double sigma);
 };
 
 #endif // KERNEL_H

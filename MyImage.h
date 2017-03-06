@@ -30,15 +30,27 @@ class MyImage
 
 
 public:
+    MyImage& operator=(MyImage& sample) {
+        if (this == &sample) {
+            return *this;
+        }
+        width = sample.width;
+        height = sample.height;
+        pixels = move(sample.pixels);
+        return *this;
+    }
+
     static MyImage createMyImageFromQImage(const QImage qImage);
     MyImage();
     MyImage(int height, int width);
+    MyImage(const MyImage &sample);
     double getPixel(int i, int j) const;
     MyImage convoluton(const Kernel& kernel, BorderType borderType) const;
     MyImage normalize(double newMin, double newMax) const;
     MyImage countHypotenuse(const MyImage& other) const;
     bool save(const QString filename);
     QImage createQImageFromImage();
+    MyImage divideImage() const;
 };
 
 #endif // IMAGE_H
