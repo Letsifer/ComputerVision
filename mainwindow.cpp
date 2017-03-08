@@ -50,7 +50,7 @@ void MainWindow::lab2() {
     QImage image = pix.toImage();
     auto mine = MyImage::createMyImageFromQImage(image);
     const int scalesInOctave = 3, octaves = 3;
-    const double basicSigma = 2;
+    const double basicSigma = 0.5;
     Pyramid pyramid = Pyramid::buildPyramid(mine, basicSigma, octaves, scalesInOctave);
     pyramid.savePyramid(QString::fromStdString("lab2-"));
     QDir dir2 ("../images");

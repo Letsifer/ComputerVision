@@ -21,6 +21,7 @@ struct PyramidElement {
 
 class Pyramid
 {
+    constexpr static double firstImageSigma = 1.6;
     double scalesInterval;
     int octaves, scales;
     unique_ptr<PyramidElement[]> images;
