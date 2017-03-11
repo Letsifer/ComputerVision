@@ -17,8 +17,11 @@ Pyramid::Pyramid(int octaves, int scales) {
     this->scalesInterval = pow(2, 1.0 / scales);
 }
 
-Pyramid Pyramid::buildPyramid(MyImage& image, double basicSigma, int octavesNumber, int scalesNumber) {
-    auto result = Pyramid(octavesNumber, scalesNumber);
+Pyramid::Pyramid(const MyImage& image, double basicSigma, int octavesNumber, int scalesNumber) {
+    this->octaves = octavesNumber;
+    this->scales = scalesNumber;
+    this->images = make_unique<PyramidElement[]>((size_t) (octaves * scales));
+    this->scalesInterval = pow(2, 1.0 / scales);
     basicSigma = sqrt(firstImageSigma * firstImageSigma - basicSigma * basicSigma);
     auto basicImage = image.convoluton(
                 Kernel::createXGaussKernel(basicSigma),
@@ -27,15 +30,15 @@ Pyramid Pyramid::buildPyramid(MyImage& image, double basicSigma, int octavesNumb
                 Kernel::createYGaussKernel(basicSigma),
                 BorderType::MirrorBorder
     );
-    auto elem = PyramidElement(basicImage, firstImageSigma);
+    auto elem = PyramidElement(basicImage, firstImageSigma, firstImageSigma);
     for (int i = 0; i < octavesNumber; i++) {
         for (int j = 0; j < scalesNumber; j++) {
-            result.setElement(i, j, elem);
+            setElement(i, j, elem);
+            double nextGlobalSigma = elem.globalSigma * scalesInterval;
             if (j == scalesNumber - 1) {
-                PyramidElement firstElementInNextOctaves = PyramidElement(elem.image.divideImage(), firstImageSigma);
-                elem = firstElementInNextOctaves;
+                elem = PyramidElement(elem.image.divideImage(), firstImageSigma, nextGlobalSigma);
             } else {
-                double nextSigma = elem.currentSigma * result.scalesInterval;
+                double nextSigma = elem.currentSigma * scalesInterval;
                 double kernelParameter = sqrt(nextSigma * nextSigma - elem.currentSigma * elem.currentSigma);
                 auto nextImage = elem.image.convoluton(
                             Kernel::createXGaussKernel(kernelParameter),
@@ -44,20 +47,22 @@ Pyramid Pyramid::buildPyramid(MyImage& image, double basicSigma, int octavesNumb
                             Kernel::createYGaussKernel(kernelParameter),
                             BorderType::MirrorBorder
                 );
-                PyramidElement next = PyramidElement(nextImage, nextSigma);
-                elem = next;
+                elem = PyramidElement(nextImage, nextSigma, nextGlobalSigma);
             }
         }
     }
-    return result;
 }
 
-void Pyramid::savePyramid(QString filename) {
+void Pyramid::savePyramid(const QString filename) {
     for (int i = 0; i < octaves; i++) {
         for (int j = 0; j < scales; j++) {
             QString temp = QString(filename);
-            string text = "pyramid(" + to_string(i) + "-" + to_string(j) + ").jpg";
-            getElement(i, j).image.save(temp.append(QString::fromStdString(text)));
+            PyramidElement element = getElement(i, j);
+            string text = "pyramid(" + to_string(i) + "-" + to_string(j)
+                    + "), local sigma=" + to_string(element.currentSigma)
+                    + ", global sigma=" + to_string(element.globalSigma)
+                    +  ".jpg";
+            element.image.save(temp.append(QString::fromStdString(text)));
         }
     }
 }

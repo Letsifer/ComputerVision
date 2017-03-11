@@ -14,7 +14,7 @@ class MyImage
     constexpr static double BLACK_BORDER = 0, WHITE_BORDER = 255;
     int width, height;
     unique_ptr<double[]> pixels;
-    void setPixel(int i, int j, double value);
+
     double getBorderPixel(int i, int j, const BorderType borderType) const;
     double pixelConvolution(int y, int x, const Kernel& kernel, const BorderType borderType) const;
     bool isXInRange(int value) const{
@@ -30,7 +30,8 @@ class MyImage
 
 
 public:
-    MyImage& operator=(MyImage& sample) {
+    void setPixel(int i, int j, double value);
+    MyImage& operator=(MyImage&& sample) {
         if (this == &sample) {
             return *this;
         }
@@ -39,7 +40,23 @@ public:
         pixels = move(sample.pixels);
         return *this;
     }
+    MyImage& operator=(const MyImage& sample) {
+        if (this == &sample) {
+            return *this;
+        }
+        width = sample.width;
+        height = sample.height;  
+        pixels = make_unique<double[]>((size_t) (width * height));
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                setPixel(i, j, sample.getPixel(i, j));
+            }
+        }
+        return *this;
+    }
 
+    int getHeight() const {return height;}
+    int getWidth() const {return width;}
     static MyImage createMyImageFromQImage(const QImage qImage);
     MyImage();
     MyImage(int height, int width);

@@ -15,6 +15,18 @@ constexpr static double HORIZONTAL_KERNEL[9] = {
      1,  2,  1
 };
 
+constexpr static double TEST_KERNEL[9] = {
+    0, 0.2, 0,
+    0.2, 0.2, 0.2,
+    0, 0.2, 0
+};
+
+Kernel Kernel::createTestKernel() {
+    Kernel kernel = Kernel(3, 3);
+    copy(begin(TEST_KERNEL), end(TEST_KERNEL), kernel.kernel.get());
+    return kernel;
+}
+
 Kernel::Kernel()
 {
 
@@ -48,7 +60,7 @@ Kernel Kernel::createYSobelKernel() {
 }
 
 Kernel Kernel::createYGaussKernel(const double sigma) {
-    const double denominator = sqrt(2 * M_PI * sigma), sigmaSqr = 2 * sigma * sigma;
+    const double denominator = sqrt(2 * M_PI) * sigma, sigmaSqr = 2 * sigma * sigma;
     const int k = (int) round(3 * sigma), size = k * 2 + 1;
     Kernel kernel = Kernel(size, 1);
     for (int i = 0; i < size; i++) {
@@ -60,7 +72,7 @@ Kernel Kernel::createYGaussKernel(const double sigma) {
 }
 
 Kernel Kernel::createXGaussKernel(const double sigma) {
-    const double denominator = sqrt(2 * M_PI * sigma), sigmaSqr = 2 * sigma * sigma;
+    const double denominator = sqrt(2 * M_PI) * sigma, sigmaSqr = 2 * sigma * sigma;
     const int k = (int) round(3 * sigma), size = k * 2 + 1;
     Kernel kernel = Kernel(1, size);
     for (int i = 0; i < size; i++) {

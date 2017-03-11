@@ -36,4 +36,5 @@ DISTFILES += \
     images/ lab1GaussY.jpg \
     images/ lab1SobelResult.jpg \
     images/ lab1SobelX.jpg \
-    images/ lab1SobelY.jpg
+    images/ lab1SobelY.jpg \
+    images/ialta.jpg

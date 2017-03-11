@@ -10,6 +10,8 @@ class Kernel
     unique_ptr<double[]> kernel;
     void setElement(int i, int j, double value);
 public:
+    int getHeight(){return height;}
+    int getWIdth(){return width;}
     Kernel();
     Kernel(int height, int width);
     double getElement(int i, int j) const;
@@ -30,6 +32,8 @@ public:
     static Kernel createXGaussKernel(const double sigma);
     static Kernel createYGaussKernel(const double sigma);
     static Kernel createGaussKernel(const double sigma);
+
+    static Kernel createTestKernel();
 };
 
 #endif // KERNEL_H

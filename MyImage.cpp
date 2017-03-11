@@ -137,7 +137,7 @@ bool MyImage::save(const QString filename) {
     auto normalized = this->normalize(0, 255);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            int color = (int)(normalized.getPixel(i, j));
+            int color = (int)(normalized.getPixel(i, j) + 0.5);
             qImage.setPixel(j, i, qRgb(color, color, color));
         }
     }
@@ -150,7 +150,7 @@ QImage MyImage::createQImageFromImage(){
     auto normalized = this->normalize(0, 255);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            int color = (int)(normalized.getPixel(i, j));
+            int color = (int)(normalized.getPixel(i, j) + 0.5);
             image.setPixel(j, i, qRgb(color, color, color));
         }
     }
@@ -160,12 +160,12 @@ QImage MyImage::createQImageFromImage(){
 MyImage MyImage::divideImage() const{
     const int newWidth = width / 2, newHeight = height / 2;
     MyImage image = MyImage(newHeight, newWidth);
-    for (int i = 0; i < height; i+=2) {
-        for (int j = 0; j < width; j+=2) {
+    for (int i = 0; i < newHeight; i++) {
+        for (int j = 0; j < newWidth; j++) {
             double value =
-                    getPixel(i, j) + getPixel(i + 1, j) +
-                    getPixel(i, j + 1) + getPixel(i + 1, j + 1);
-            image.setPixel(i / 2, j / 2, value / 4);
+                    getPixel(2 * i, 2 * j) + getPixel(2 * i, 2 * j + 1) +
+                    getPixel(2 * i + 1, 2 * j) + getPixel(2 * i + 1, 2 * j + 1);
+            image.setPixel(i, j, value / 4);
         }
     }
     return image;

@@ -2,6 +2,7 @@
 #include "MyImage.h"
 #include "pyramid.h"
 #include <QDir>
+#include <QTextStream>
 #include "ui_mainwindow.h"
 #include <iostream>
 #include <memory>
@@ -46,12 +47,12 @@ void MainWindow::lab1() {
 void MainWindow::lab2() {
     QDir dir ("../ComputerVision/images");
     QDir().mkdir("../images");
-    QPixmap pix(dir.absoluteFilePath("wall.jpg"));
+    QPixmap pix(dir.absoluteFilePath("ialta.jpg"));
     QImage image = pix.toImage();
     auto mine = MyImage::createMyImageFromQImage(image);
-    const int scalesInOctave = 3, octaves = 3;
+    const int scalesInOctave = 5, octaves = 3;
     const double basicSigma = 0.5;
-    Pyramid pyramid = Pyramid::buildPyramid(mine, basicSigma, octaves, scalesInOctave);
+    Pyramid pyramid = Pyramid(mine, basicSigma, octaves, scalesInOctave);
     pyramid.savePyramid(QString::fromStdString("lab2-"));
     QDir dir2 ("../images");
     ui->label->setText(dir2.absolutePath().append(" - all images are there"));
@@ -63,7 +64,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     lab2();
-
 }
 
 MainWindow::~MainWindow()
