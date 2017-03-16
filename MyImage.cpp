@@ -26,6 +26,31 @@ MyImage MyImage::createMyImageFromQImage(const QImage qImage) {
     return result;
 }
 
+MyImage& MyImage::operator=(const MyImage& sample) {
+    if (this == &sample) {
+        return *this;
+    }
+    width = sample.width;
+    height = sample.height;
+    pixels = make_unique<double[]>((size_t) (width * height));
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            setPixel(i, j, sample.getPixel(i, j));
+        }
+    }
+    return *this;
+}
+
+MyImage& MyImage::operator=(MyImage&& sample) {
+    if (this == &sample) {
+        return *this;
+    }
+    width = sample.width;
+    height = sample.height;
+    pixels = move(sample.pixels);
+    return *this;
+}
+
 MyImage::MyImage(int height, int width)
 {
     this->height = height;

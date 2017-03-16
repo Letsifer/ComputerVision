@@ -37,7 +37,7 @@ class Pyramid
 public:
     Pyramid(const MyImage& image, double basicSigma, int octavesNumber, int scalesNumber);
     void savePyramid(const QString filename);
-    PyramidElement& getElement(int i, int j) const{
+    const PyramidElement& getElement(int i, int j) const{
         return images[i * scales + j];
     }
 };

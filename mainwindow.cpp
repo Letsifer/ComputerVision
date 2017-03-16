@@ -1,7 +1,7 @@
 #include "mainwindow.h"
-#include "MyImage.h"
 #include "pyramid.h"
 #include <QDir>
+#include <QPainter>
 #include <QTextStream>
 #include "ui_mainwindow.h"
 #include <iostream>
@@ -47,15 +47,73 @@ void MainWindow::lab1() {
 void MainWindow::lab2() {
     QDir dir ("../ComputerVision/images");
     QDir().mkdir("../images");
-    QPixmap pix(dir.absoluteFilePath("ialta.jpg"));
+    QString name("ialta.jpg");
+    QPixmap pix(dir.absoluteFilePath(name));
     QImage image = pix.toImage();
     auto mine = MyImage::createMyImageFromQImage(image);
     const int scalesInOctave = 5, octaves = 3;
     const double basicSigma = 0.5;
     Pyramid pyramid = Pyramid(mine, basicSigma, octaves, scalesInOctave);
-    pyramid.savePyramid(QString::fromStdString("lab2-"));
+    pyramid.savePyramid(name.append(QString::fromStdString("lab2-")));
     QDir dir2 ("../images");
     ui->label->setText(dir2.absolutePath().append(" - all images are there"));
+}
+
+void MainWindow::lab3() {
+    QDir dir ("../ComputerVision/images");
+    QDir().mkdir("../images/lab3");
+    QDir dir2 ("../images/lab3");
+    ui->label->setText(dir2.absolutePath().append(" - all images are there"));
+    QString name("ialta.jpg");
+    QPixmap pix(dir.absoluteFilePath(name));
+    workWithImageInThirdLab(name, pix);
+    QString imageName1("image1.jpg");
+    QPixmap imagePix1(dir.absoluteFilePath(imageName1));
+    workWithImageInThirdLab(imageName1, imagePix1);
+    QString imageName2("image2.jpg");
+    QPixmap imagePix2(dir.absoluteFilePath(imageName2));
+    workWithImageInThirdLab(imageName2, imagePix2);
+}
+void MainWindow::workWithImageInThirdLab(const QString filename, const QPixmap pixmap) {
+    QImage image = pixmap.toImage();
+    auto mine = MyImage::createMyImageFromQImage(image);
+    const int sizeOfWindow = 3, windowsShift = 1;
+    const double contrastBorder = 50;
+    vector<InterestingPoint> points = InterestPointsFinder::moravecAlgorithm(
+                mine,
+                windowsShift,
+                sizeOfWindow,
+                contrastBorder,
+                BorderType::MirrorBorder
+                );
+    printForThirdLab(pixmap, points, filename + QString::fromStdString("-moravecBeforeSuppresion.jpg"));
+    const int necessaryPoints = 150;
+    vector<InterestingPoint> pointsAfterSuppression = InterestPointsFinder::adaptiveNonMaximumSuppression(
+                mine, points, necessaryPoints
+                );
+    string moravecAfterSuppression = "-moravecAfterSuppresion" + to_string(necessaryPoints) + "_points.jpg";
+    printForThirdLab(pixmap, pointsAfterSuppression, filename + QString::fromStdString(moravecAfterSuppression));
+
+    points = InterestPointsFinder::harrisAlgorithm(mine, contrastBorder, BorderType::MirrorBorder);
+    printForThirdLab(pixmap, points, filename + QString::fromStdString("-harrisBeforeSuppresion.jpg"));
+    pointsAfterSuppression = InterestPointsFinder::adaptiveNonMaximumSuppression(
+                mine, points, necessaryPoints
+                );
+    string harrisAfterSuppression = "-harrisAfterSuppresion" + to_string(necessaryPoints) + "_points.jpg";
+    printForThirdLab(pixmap, pointsAfterSuppression, filename + QString::fromStdString(harrisAfterSuppression));
+}
+
+
+void MainWindow::printForThirdLab(const QPixmap pix, const vector<InterestingPoint> points, const QString filename) {
+    QImage image = pix.toImage();
+    QPainter painter(&image);
+    painter.setPen(QColor(255, 0, 0));
+    const int radius = 6;
+    for (auto &point : points) {
+        painter.drawEllipse(point.getX() - radius / 2, point.getY() - radius / 2, radius, radius);
+    }
+    QDir dir ("../images/lab3");
+    image.save(dir.absoluteFilePath(filename), "jpg");
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -63,7 +121,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    lab2();
+    lab3();
 }
 
 MainWindow::~MainWindow()

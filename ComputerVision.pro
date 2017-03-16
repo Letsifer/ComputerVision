@@ -16,12 +16,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     MyImage.cpp \
     kernel.cpp \
-    pyramid.cpp
+    pyramid.cpp \
+    interestpointsfinder.cpp
 
 HEADERS  += mainwindow.h \
     MyImage.h \
     kernel.h \
-    pyramid.h
+    pyramid.h \
+    interestpointsfinder.h
 
 FORMS    += mainwindow.ui
 
@@ -37,4 +39,6 @@ DISTFILES += \
     images/ lab1SobelResult.jpg \
     images/ lab1SobelX.jpg \
     images/ lab1SobelY.jpg \
-    images/ialta.jpg
+    images/ialta.jpg \
+    images/image1.jpg \
+    images/image2.jpg
