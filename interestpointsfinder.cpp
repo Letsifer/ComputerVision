@@ -52,7 +52,7 @@ MyImage InterestPointsFinder::findContrastsImageForMoravecAlgorithm(
     MyImage result = MyImage(height, width);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            double minError = HUGE_VAL;
+            double minError = numeric_limits<double>::max();
             for (int dx = -windowsShift; dx <= windowsShift; dx++) {
                 for (int dy = -windowsShift; dy <= windowsShift; dy++) {
                     if (dx == 0 && dy == 0) {
@@ -102,8 +102,7 @@ vector<InterestingPoint> InterestPointsFinder::findInteresingPointsFromContrastI
                 }
             }
             if (isLocalMaximum) {
-                InterestingPoint point = InterestingPoint(j, i, contrastImage.getPixel(i, j));
-                result.push_back(point);
+                result.emplace_back(j, i, contrastImage.getPixel(i, j));
             }
         }
     }
@@ -111,8 +110,8 @@ vector<InterestingPoint> InterestPointsFinder::findInteresingPointsFromContrastI
 }
 
 vector<InterestingPoint> InterestPointsFinder::adaptiveNonMaximumSuppression(
-        const MyImage image,
-        vector<InterestingPoint> points,
+        const MyImage& image,
+        vector<InterestingPoint>& points,
         const unsigned int necessaryPoints
         ) {
     if (points.size() <= necessaryPoints) {

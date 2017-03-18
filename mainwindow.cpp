@@ -66,16 +66,15 @@ void MainWindow::lab3() {
     ui->label->setText(dir2.absolutePath().append(" - all images are there"));
     QString name("ialta.jpg");
     QPixmap pix(dir.absoluteFilePath(name));
-    workWithImageInThirdLab(name, pix);
+    workWithImageInThirdLab(name, pix.toImage());
     QString imageName1("image1.jpg");
     QPixmap imagePix1(dir.absoluteFilePath(imageName1));
-    workWithImageInThirdLab(imageName1, imagePix1);
+    workWithImageInThirdLab(imageName1, imagePix1.toImage());
     QString imageName2("image2.jpg");
     QPixmap imagePix2(dir.absoluteFilePath(imageName2));
-    workWithImageInThirdLab(imageName2, imagePix2);
+    workWithImageInThirdLab(imageName2, imagePix2.toImage());
 }
-void MainWindow::workWithImageInThirdLab(const QString filename, const QPixmap pixmap) {
-    QImage image = pixmap.toImage();
+void MainWindow::workWithImageInThirdLab(const QString filename, const QImage image) {
     auto mine = MyImage::createMyImageFromQImage(image);
     const int sizeOfWindow = 3, windowsShift = 1;
     const double contrastBorder = 50;
@@ -86,31 +85,30 @@ void MainWindow::workWithImageInThirdLab(const QString filename, const QPixmap p
                 contrastBorder,
                 BorderType::MirrorBorder
                 );
-    printForThirdLab(pixmap, points, filename + QString::fromStdString("-moravecBeforeSuppresion.jpg"));
+    printForThirdLab(image, points, filename + QString::fromStdString("-moravecBeforeSuppresion.jpg"));
     const int necessaryPoints = 150;
     vector<InterestingPoint> pointsAfterSuppression = InterestPointsFinder::adaptiveNonMaximumSuppression(
                 mine, points, necessaryPoints
                 );
     string moravecAfterSuppression = "-moravecAfterSuppresion" + to_string(necessaryPoints) + "_points.jpg";
-    printForThirdLab(pixmap, pointsAfterSuppression, filename + QString::fromStdString(moravecAfterSuppression));
+    printForThirdLab(image, pointsAfterSuppression, filename + QString::fromStdString(moravecAfterSuppression));
 
     points = InterestPointsFinder::harrisAlgorithm(mine, contrastBorder, BorderType::MirrorBorder);
-    printForThirdLab(pixmap, points, filename + QString::fromStdString("-harrisBeforeSuppresion.jpg"));
+    printForThirdLab(image, points, filename + QString::fromStdString("-harrisBeforeSuppresion.jpg"));
     pointsAfterSuppression = InterestPointsFinder::adaptiveNonMaximumSuppression(
                 mine, points, necessaryPoints
                 );
     string harrisAfterSuppression = "-harrisAfterSuppresion" + to_string(necessaryPoints) + "_points.jpg";
-    printForThirdLab(pixmap, pointsAfterSuppression, filename + QString::fromStdString(harrisAfterSuppression));
+    printForThirdLab(image, pointsAfterSuppression, filename + QString::fromStdString(harrisAfterSuppression));
 }
 
 
-void MainWindow::printForThirdLab(const QPixmap pix, const vector<InterestingPoint> points, const QString filename) {
-    QImage image = pix.toImage();
+void MainWindow::printForThirdLab(QImage image, const vector<InterestingPoint> points, const QString filename) {
     QPainter painter(&image);
     painter.setPen(QColor(255, 0, 0));
     const int radius = 6;
     for (auto &point : points) {
-        painter.drawEllipse(point.getX() - radius / 2, point.getY() - radius / 2, radius, radius);
+        painter.drawEllipse(point.x - radius / 2, point.y - radius / 2, radius, radius);
     }
     QDir dir ("../images/lab3");
     image.save(dir.absoluteFilePath(filename), "jpg");

@@ -21,8 +21,8 @@ class MainWindow : public QMainWindow
     void lab1();
     void lab2();
     void lab3();
-    void workWithImageInThirdLab(const QString filename, const QPixmap pixmap);
-    void printForThirdLab(const QPixmap pix, const vector<InterestingPoint> points, const QString filename);
+    void workWithImageInThirdLab(const QString filename, const QImage image);
+    void printForThirdLab(QImage image, const vector<InterestingPoint> points, const QString filename);
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();

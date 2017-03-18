@@ -8,21 +8,9 @@ using namespace std;
 struct InterestingPoint {
     int x, y;
     double contrast;
-    InterestingPoint(int x, int y, double contrast) {
-        this->x = x;
-        this->y = y;
-        this->contrast = contrast;
-    }
-    int getX() const {
-        return x;
-    }
-    int getY() const {
-        return y;
-    }
+    InterestingPoint(int x, int y, double contrast) : x(x), y(y), contrast(contrast){}
     double getDistance(const InterestingPoint point) const{
-        double differenceX = x - point.x,
-               differenceY = y - point.y;
-        return sqrt(differenceX * differenceX + differenceY * differenceY);
+        return hypot(x - point.x, y - point.y);
     }
 
 };
@@ -30,25 +18,25 @@ struct InterestingPoint {
 class InterestPointsFinder
 {
     static MyImage findContrastsImageForMoravecAlgorithm(
-            const MyImage image, const int windowsShift,
-            const int halfSizeOfWindow, const BorderType type
+            const MyImage image, int windowsShift,
+            int halfSizeOfWindow, const BorderType type
             );
     static vector<InterestingPoint> findInteresingPointsFromContrastImage(
-            const MyImage contrastImage, const double contrastBorder,
-            const BorderType type, const int halfSizeOfWindow
+            const MyImage contrastImage, double contrastBorder,
+            const BorderType type, int halfSizeOfWindow
             );
 public:
     static vector<InterestingPoint> moravecAlgorithm(
-            const MyImage image, const int windowsShift,
-            const int sizeOfWindow, const double contrastBorder, const BorderType type
+            const MyImage image, int windowsShift,
+            int sizeOfWindow, double contrastBorder, const BorderType type
             );
     static vector<InterestingPoint> harrisAlgorithm(
-            const MyImage image, const double contrastBorder, const BorderType type
+            const MyImage image, double contrastBorder, const BorderType type
             );
     static vector<InterestingPoint> adaptiveNonMaximumSuppression(
-            const MyImage image,
-            vector<InterestingPoint> points,
-            const unsigned int necessaryPoints
+            const MyImage& image,
+            vector<InterestingPoint>& points,
+            unsigned int necessaryPoints
             );
 
 };

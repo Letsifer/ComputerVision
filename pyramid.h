@@ -10,16 +10,8 @@ struct PyramidElement {
     double currentSigma;
     double globalSigma;
 
-    PyramidElement() {
-        this->currentSigma = -1;
-        this->globalSigma = -1;
-    }
-
-    PyramidElement(MyImage image, double currentSigma, double globalSigma) {
-        this->image = image;
-        this->currentSigma = currentSigma;
-        this->globalSigma = globalSigma;
-    }
+    PyramidElement() : currentSigma(-1), globalSigma(-1){}
+    PyramidElement(MyImage image, double currentSigma, double globalSigma) : image(image), currentSigma(currentSigma), globalSigma(globalSigma){}
 };
 
 class Pyramid
