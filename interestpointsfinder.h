@@ -8,33 +8,39 @@ using namespace std;
 struct InterestingPoint {
     int x, y;
     double contrast;
-    InterestingPoint(int x, int y, double contrast) : x(x), y(y), contrast(contrast){}
+    double radiusToGreaterContrast;
+    InterestingPoint() : x(-1), y(-1), contrast(-1), radiusToGreaterContrast(numeric_limits<double>::max()){}
+    InterestingPoint(int x, int y, double contrast) : x(x), y(y), contrast(contrast), radiusToGreaterContrast(numeric_limits<double>::max()){}
     double getDistance(const InterestingPoint point) const{
         return hypot(x - point.x, y - point.y);
     }
-
+    bool operator<(const InterestingPoint& point) const{
+        if (x == point.x && y == point.y) {
+            return false;
+        }
+        return radiusToGreaterContrast >= point.radiusToGreaterContrast;
+    }
 };
 
 class InterestPointsFinder
 {
     static MyImage findContrastsImageForMoravecAlgorithm(
-            const MyImage image, int windowsShift,
+            const MyImage& image, int windowsShift,
             int halfSizeOfWindow, const BorderType type
             );
     static vector<InterestingPoint> findInteresingPointsFromContrastImage(
-            const MyImage contrastImage, double contrastBorder,
+            const MyImage& contrastImage, double contrastBorder,
             const BorderType type, int halfSizeOfWindow
             );
 public:
     static vector<InterestingPoint> moravecAlgorithm(
-            const MyImage image, int windowsShift,
+            const MyImage& image, int windowsShift,
             int sizeOfWindow, double contrastBorder, const BorderType type
             );
     static vector<InterestingPoint> harrisAlgorithm(
-            const MyImage image, double contrastBorder, const BorderType type
+            const MyImage& image, double contrastBorder, const BorderType type
             );
-    static vector<InterestingPoint> adaptiveNonMaximumSuppression(
-            const MyImage& image,
+    static void adaptiveNonMaximumSuppression(
             vector<InterestingPoint>& points,
             unsigned int necessaryPoints
             );

@@ -1,7 +1,7 @@
 #include "interestpointsfinder.h"
 
 vector<InterestingPoint> InterestPointsFinder::moravecAlgorithm(
-            const MyImage image, const int windowsShift,
+            const MyImage& image, const int windowsShift,
             const int sizeOfWindow, const double contrastBorder,
             const BorderType type
             ) {
@@ -13,7 +13,7 @@ vector<InterestingPoint> InterestPointsFinder::moravecAlgorithm(
 }
 
 vector<InterestingPoint> InterestPointsFinder::harrisAlgorithm(
-            const MyImage image, const double contrastBorder, const BorderType type
+            const MyImage& image, const double contrastBorder, const BorderType type
             ) {
     auto gradientX = image.convoluton(Kernel::createXSobelKernel(), type);
     auto gradientY = image.convoluton(Kernel::createYSobelKernel(), type);
@@ -45,7 +45,7 @@ vector<InterestingPoint> InterestPointsFinder::harrisAlgorithm(
 }
 
 MyImage InterestPointsFinder::findContrastsImageForMoravecAlgorithm(
-        const MyImage image, const int windowsShift,
+        const MyImage& image, const int windowsShift,
         const int halfSizeOfWindow, const BorderType type
         ) {
     const int height = image.getHeight(), width = image.getWidth();
@@ -77,7 +77,7 @@ MyImage InterestPointsFinder::findContrastsImageForMoravecAlgorithm(
 }
 
 vector<InterestingPoint> InterestPointsFinder::findInteresingPointsFromContrastImage(
-            const MyImage contrastImage, double contrastBorder, BorderType type, int halfSizeOfWindow
+            const MyImage& contrastImage, double contrastBorder, BorderType type, int halfSizeOfWindow
             ) {
     vector<InterestingPoint> result;
     const int height = contrastImage.getHeight(), width = contrastImage.getWidth();
@@ -109,31 +109,24 @@ vector<InterestingPoint> InterestPointsFinder::findInteresingPointsFromContrastI
     return result;
 }
 
-vector<InterestingPoint> InterestPointsFinder::adaptiveNonMaximumSuppression(
-        const MyImage& image,
+void InterestPointsFinder::adaptiveNonMaximumSuppression(
         vector<InterestingPoint>& points,
         const unsigned int necessaryPoints
         ) {
     if (points.size() <= necessaryPoints) {
-        return points;
+        return;
     }
     const double filterCoefficient = 0.9;
-    const int maxRadius = max(image.getHeight(), image.getWidth()) / 2 + 1;
-    for (int r = 1; r < maxRadius; r++) {
-        for (int i = 0; i < points.size(); i++) {
-            for (int j = 0; j < points.size(); j++) {
-                if (i == j) {
-                    continue;
-                }
-                if (points[i].getDistance(points[j]) <= r && points[i].contrast * filterCoefficient >= points[j].contrast) {
-                    points.erase(points.begin() + j);
-                    j--;
-                    if (points.size() == necessaryPoints) {
-                        return points;
-                    }
-                }
+    for (unsigned int i = 0; i < points.size(); i++) {
+        for (unsigned int j = 0; j < points.size(); j++) {
+            if (i == j) {
+                continue;
+            }
+            if (points[i].contrast * filterCoefficient >= points[j].contrast) {
+                points[j].radiusToGreaterContrast = min(points[j].radiusToGreaterContrast, points[i].getDistance(points[j]));
             }
         }
     }
-    return points;
+    sort(points.begin(), points.end());
+    points.resize(necessaryPoints);
 }

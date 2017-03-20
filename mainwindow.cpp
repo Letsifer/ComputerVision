@@ -74,11 +74,11 @@ void MainWindow::lab3() {
     QPixmap imagePix2(dir.absoluteFilePath(imageName2));
     workWithImageInThirdLab(imageName2, imagePix2.toImage());
 }
-void MainWindow::workWithImageInThirdLab(const QString filename, const QImage image) {
+void MainWindow::workWithImageInThirdLab(const QString filename, const QImage& image) {
     auto mine = MyImage::createMyImageFromQImage(image);
     const int sizeOfWindow = 3, windowsShift = 1;
     const double contrastBorder = 50;
-    vector<InterestingPoint> points = InterestPointsFinder::moravecAlgorithm(
+    auto points = InterestPointsFinder::moravecAlgorithm(
                 mine,
                 windowsShift,
                 sizeOfWindow,
@@ -87,19 +87,19 @@ void MainWindow::workWithImageInThirdLab(const QString filename, const QImage im
                 );
     printForThirdLab(image, points, filename + QString::fromStdString("-moravecBeforeSuppresion.jpg"));
     const int necessaryPoints = 150;
-    vector<InterestingPoint> pointsAfterSuppression = InterestPointsFinder::adaptiveNonMaximumSuppression(
-                mine, points, necessaryPoints
+    InterestPointsFinder::adaptiveNonMaximumSuppression(
+                points, necessaryPoints
                 );
     string moravecAfterSuppression = "-moravecAfterSuppresion" + to_string(necessaryPoints) + "_points.jpg";
-    printForThirdLab(image, pointsAfterSuppression, filename + QString::fromStdString(moravecAfterSuppression));
+    printForThirdLab(image, points, filename + QString::fromStdString(moravecAfterSuppression));
 
     points = InterestPointsFinder::harrisAlgorithm(mine, contrastBorder, BorderType::MirrorBorder);
     printForThirdLab(image, points, filename + QString::fromStdString("-harrisBeforeSuppresion.jpg"));
-    pointsAfterSuppression = InterestPointsFinder::adaptiveNonMaximumSuppression(
-                mine, points, necessaryPoints
+    InterestPointsFinder::adaptiveNonMaximumSuppression(
+                points, necessaryPoints
                 );
     string harrisAfterSuppression = "-harrisAfterSuppresion" + to_string(necessaryPoints) + "_points.jpg";
-    printForThirdLab(image, pointsAfterSuppression, filename + QString::fromStdString(harrisAfterSuppression));
+    printForThirdLab(image, points, filename + QString::fromStdString(harrisAfterSuppression));
 }
 
 
