@@ -15,18 +15,6 @@ constexpr static double HORIZONTAL_KERNEL[9] = {
      1,  2,  1
 };
 
-constexpr static double TEST_KERNEL[9] = {
-    0, 0.2, 0,
-    0.2, 0.2, 0.2,
-    0, 0.2, 0
-};
-
-Kernel Kernel::createTestKernel() {
-    Kernel kernel = Kernel(3, 3);
-    copy(begin(TEST_KERNEL), end(TEST_KERNEL), kernel.kernel.get());
-    return kernel;
-}
-
 Kernel::Kernel()
 {
 

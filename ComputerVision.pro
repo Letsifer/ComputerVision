@@ -17,13 +17,15 @@ SOURCES += main.cpp\
     MyImage.cpp \
     kernel.cpp \
     pyramid.cpp \
-    interestpointsfinder.cpp
+    interestpointsfinder.cpp \
+    descriptorfinder.cpp
 
 HEADERS  += mainwindow.h \
     MyImage.h \
     kernel.h \
     pyramid.h \
-    interestpointsfinder.h
+    interestpointsfinder.h \
+    descriptorfinder.h
 
 FORMS    += mainwindow.ui
 

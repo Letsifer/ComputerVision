@@ -20,7 +20,7 @@ MyImage MyImage::createMyImageFromQImage(const QImage qImage) {
             double red = qRed(rgb) * 0.299,
                    green = qGreen(rgb) * 0.587,
                     blue = qBlue(rgb) * 0.114;
-            result.setPixel(i, j, red + green + blue);
+            result.setPixel(i, j, (red + green + blue) / 255);
         }
     }
     return result;

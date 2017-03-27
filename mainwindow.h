@@ -9,6 +9,7 @@
 #include "interestpointsfinder.h"
 #include <QDir>
 #include <QPainter>
+#include "descriptorfinder.h"
 using namespace std;
 
 namespace Ui {
@@ -23,6 +24,9 @@ class MainWindow : public QMainWindow
     void lab3();
     void workWithImageInThirdLab(const QString filename, const QImage& image);
     void printForThirdLab(QImage image, const vector<InterestingPoint> points, const QString filename);
+
+    void lab4();
+    vector<Descriptor> findPoints(const MyImage& image, int points);
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();

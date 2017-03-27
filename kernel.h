@@ -32,8 +32,6 @@ public:
     static Kernel createXGaussKernel(const double sigma);
     static Kernel createYGaussKernel(const double sigma);
     static Kernel createGaussKernel(const double sigma);
-
-    static Kernel createTestKernel();
 };
 
 #endif // KERNEL_H

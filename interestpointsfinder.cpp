@@ -13,21 +13,20 @@ vector<InterestingPoint> InterestPointsFinder::moravecAlgorithm(
 }
 
 vector<InterestingPoint> InterestPointsFinder::harrisAlgorithm(
-            const MyImage& image, const double contrastBorder, const BorderType type
+            const MyImage& image, const int windowSize, const double contrastBorder, const BorderType type
             ) {
     auto gradientX = image.convoluton(Kernel::createXSobelKernel(), type);
     auto gradientY = image.convoluton(Kernel::createYSobelKernel(), type);
     const int height = image.getHeight(), width = image.getWidth();
     MyImage contrastImage = MyImage(height, width);
-    const double sigmaForWindow = 1, k = 0.06;
-    Kernel gaussKernel = Kernel::createGaussKernel(sigmaForWindow);
-    const int halfWidthOfKernel = gaussKernel.getKernelHalfHeight();
+    const double k = 0.06;
+    const int halfWidthOfKernel = windowSize / 2;
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             double A = 0, B = 0, C = 0;
             for (int u = -halfWidthOfKernel; u < halfWidthOfKernel; u++) {
                 for (int v = -halfWidthOfKernel; v < halfWidthOfKernel; v++) {
-                    double fromGauss = gaussKernel.getElementInRelationToCenter(u, v),
+                    double fromGauss = 1 - 0.03 * (abs(u) + abs(v)),
                            fromGradientX = gradientX.getBorderPixel(i + u, j + v, type),
                            fromGradientY = gradientY.getBorderPixel(i + u, j + v, type);
                     A += fromGauss * fromGradientX * fromGradientX;
@@ -127,6 +126,9 @@ void InterestPointsFinder::adaptiveNonMaximumSuppression(
             }
         }
     }
-    sort(points.begin(), points.end());
+    sort(points.begin(), points.end(),
+         [](const auto &point1, const auto &point2) {
+        return point1.radiusToGreaterContrast - point2.radiusToGreaterContrast;
+    });
     points.resize(necessaryPoints);
 }

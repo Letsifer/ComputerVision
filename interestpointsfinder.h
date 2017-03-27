@@ -14,12 +14,6 @@ struct InterestingPoint {
     double getDistance(const InterestingPoint point) const{
         return hypot(x - point.x, y - point.y);
     }
-    bool operator<(const InterestingPoint& point) const{
-        if (x == point.x && y == point.y) {
-            return false;
-        }
-        return radiusToGreaterContrast >= point.radiusToGreaterContrast;
-    }
 };
 
 class InterestPointsFinder
@@ -38,7 +32,7 @@ public:
             int sizeOfWindow, double contrastBorder, const BorderType type
             );
     static vector<InterestingPoint> harrisAlgorithm(
-            const MyImage& image, double contrastBorder, const BorderType type
+            const MyImage& image, const int windowSize, double contrastBorder, const BorderType type
             );
     static void adaptiveNonMaximumSuppression(
             vector<InterestingPoint>& points,
