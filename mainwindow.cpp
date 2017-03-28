@@ -119,15 +119,20 @@ void MainWindow::lab4() {
     QDir dir2 ("../images/lab4");
     ui->label->setText(dir2.absolutePath().append(" - all images are there"));
     const int points = 150;
+    QFile file("../images/lab4/answer.txt");
+    if (file.open(QIODevice::ReadWrite)) {
+        QTextStream stream( &file );
+
+
     QString imageName1("image1.jpg");
     QImage qImage1 = QPixmap(dir.absoluteFilePath(imageName1)).toImage();
     MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
-    auto firstVector = findPoints(image1, points);
+    auto firstVector = findPoints(image1, points, stream);
 
     QString imageName2("image2.jpg");
     QImage qImage2 = QPixmap(dir.absoluteFilePath(imageName2)).toImage();
     MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
-    auto secondVector = findPoints(image2, points);
+    auto secondVector = findPoints(image2, points, stream);
 
     QImage result = QImage(image1.getWidth() + image2.getWidth(),
                            max(image1.getHeight(), image2.getHeight()),
@@ -146,6 +151,20 @@ void MainWindow::lab4() {
 
     QPainter painter(&result);
     painter.setPen(QColor(255, 0, 0));
+
+
+
+        for (int i = 0; i < firstVector[0].getSize(); i++) {
+            double d = firstVector[0].getElement(i);
+            stream << QString::number(d) << ' ';
+        }
+        stream << "\n";
+        for (int i = 0; i < secondVector[0].getSize(); i++) {
+            double d = secondVector[0].getElement(i);
+            stream << QString::number(d) << " ";
+        }
+
+
     const double T = 0.8;
     for (unsigned int i = 0; i < firstVector.size(); i++) {
         double minDistance = numeric_limits<double>::max(), secondMinDistance = minDistance;
@@ -170,9 +189,10 @@ void MainWindow::lab4() {
         }
     }
     result.save(dir2.absoluteFilePath("lab4-result.jpg"), "jpg");
+    } //end fileopen
 }
 
-vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points) {
+vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points, QTextStream& stream) {
     const double contrastHarrisBorder = 3;
     const int regionsX = 2, regionsY = 2, sizeOfRegion = 4, baskets = 8;
     auto pointVector = InterestPointsFinder::harrisAlgorithm(image, 7, contrastHarrisBorder, BorderType::MirrorBorder);
@@ -183,6 +203,11 @@ vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points) {
     for (InterestingPoint point : pointVector) {
         descriptors.emplace_back(image, point.x, point.y, regionsX, regionsY, sizeOfRegion, sizeOfRegion, baskets);
     }
+    for (int i = 0; i < descriptors[0].getSize(); i++) {
+        double d = descriptors[0].getElement(i);
+        stream << QString::number(d) << ' ';
+    }
+    stream << "\n";
     return descriptors;
 }
 
