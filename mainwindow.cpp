@@ -118,21 +118,17 @@ void MainWindow::lab4() {
     QDir().mkdir("../images/lab4");
     QDir dir2 ("../images/lab4");
     ui->label->setText(dir2.absolutePath().append(" - all images are there"));
-    const int points = 150;
-    QFile file("../images/lab4/answer.txt");
-    if (file.open(QIODevice::ReadWrite)) {
-        QTextStream stream( &file );
+    const int points = 70;
 
-
-    QString imageName1("image1.jpg");
+    QString imageName1("table1.jpg");
     QImage qImage1 = QPixmap(dir.absoluteFilePath(imageName1)).toImage();
     MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
-    auto firstVector = findPoints(image1, points, stream);
+    auto firstVector = findPoints(image1, points);
 
-    QString imageName2("image2.jpg");
+    QString imageName2("table2.jpg");
     QImage qImage2 = QPixmap(dir.absoluteFilePath(imageName2)).toImage();
     MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
-    auto secondVector = findPoints(image2, points, stream);
+    auto secondVector = findPoints(image2, points);
 
     QImage result = QImage(image1.getWidth() + image2.getWidth(),
                            max(image1.getHeight(), image2.getHeight()),
@@ -150,21 +146,7 @@ void MainWindow::lab4() {
     }
 
     QPainter painter(&result);
-    painter.setPen(QColor(255, 0, 0));
-
-
-
-        for (int i = 0; i < firstVector[0].getSize(); i++) {
-            double d = firstVector[0].getElement(i);
-            stream << QString::number(d) << ' ';
-        }
-        stream << "\n";
-        for (int i = 0; i < secondVector[0].getSize(); i++) {
-            double d = secondVector[0].getElement(i);
-            stream << QString::number(d) << " ";
-        }
-
-
+    int color = 0;
     const double T = 0.8;
     for (unsigned int i = 0; i < firstVector.size(); i++) {
         double minDistance = numeric_limits<double>::max(), secondMinDistance = minDistance;
@@ -183,19 +165,30 @@ void MainWindow::lab4() {
         }
         double rate = minDistance / secondMinDistance;
         if (rate <= T) {
+            switch (color) {
+            case 0: painter.setPen(QColor(255, 0, 0));
+                color++;
+                break;
+            case 1: painter.setPen(QColor(0, 255, 0));
+                color++;
+                break;
+            case 2: painter.setPen(QColor(0, 0, 255));
+                color = 0;
+                break;
+            }
+
             int x1 = firstVector[i].getPointX(), y1 = firstVector[i].getPointY(),
-                x2 = secondVector[indexMin].getPointX(), y2 = secondVector[indexMin].getPointY();
+                x2 = secondVector[indexMin].getPointX() + qImage1.width(), y2 = secondVector[indexMin].getPointY();
             painter.drawLine(x1, y1, x2, y2);
         }
     }
     result.save(dir2.absoluteFilePath("lab4-result.jpg"), "jpg");
-    } //end fileopen
 }
 
-vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points, QTextStream& stream) {
-    const double contrastHarrisBorder = 3;
-    const int regionsX = 2, regionsY = 2, sizeOfRegion = 4, baskets = 8;
-    auto pointVector = InterestPointsFinder::harrisAlgorithm(image, 7, contrastHarrisBorder, BorderType::MirrorBorder);
+vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points) {
+    const double contrastHarrisBorder = 4;
+    const int regionsX = 4, regionsY = 4, sizeOfRegion = 4, baskets = 8, windowSize = 7;
+    auto pointVector = InterestPointsFinder::harrisAlgorithm(image, windowSize, contrastHarrisBorder, BorderType::MirrorBorder);
     InterestPointsFinder::adaptiveNonMaximumSuppression(
                 pointVector, points
                 );
@@ -203,11 +196,6 @@ vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points, QTex
     for (InterestingPoint point : pointVector) {
         descriptors.emplace_back(image, point.x, point.y, regionsX, regionsY, sizeOfRegion, sizeOfRegion, baskets);
     }
-    for (int i = 0; i < descriptors[0].getSize(); i++) {
-        double d = descriptors[0].getElement(i);
-        stream << QString::number(d) << ' ';
-    }
-    stream << "\n";
     return descriptors;
 }
 

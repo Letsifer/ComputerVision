@@ -16,13 +16,14 @@ Descriptor::Descriptor(const MyImage& image,
         for (int j = 0; j < regionsY; j++) {
             Hystogramm hystogramm = findHystogrammForRegion(image, leftX + sizeOfRegionX * j, topY + sizeOfRegionY * i, sizeOfRegionX, sizeOfRegionY, basketsInHystogramm);
             for (int k = 0; k < basketsInHystogramm; k++) {
-                elements[cnt++] = hystogramm.getBasketValue(k);
+                double value =  hystogramm.getBasketValue(k);
+                elements[cnt++] = value;
             }
         }
     }
     normalize();
     for (int i = 0; i < sizeOfDescriptor; i++) {
-        elements[i] = max(elements[i], NORMALIZE_THRESHOLD);
+        elements[i] = min(elements[i], NORMALIZE_THRESHOLD);
     }
     normalize();
 }
@@ -53,29 +54,27 @@ Hystogramm Descriptor::findHystogrammForRegion(const MyImage& image,
                 angle += 2 * M_PI;
             }
             auto pair = hystogramm.getNeighborsToPoint(angle);
-            Basket first, second;
-            if (pair.first.centerOfBasket > pair.second.centerOfBasket) {
-                first = pair.first;
-                second = pair.second;
-            } else {
-                second = pair.first;
-                first = pair.second;
-            }
-            double value = countValueForBasket(image.getBorderPixel(y, x, BorderType::MirrorBorder), angle, first.centerOfBasket, second.centerOfBasket);
-            first.value += value * findDistanceCoefficient(x, y);
-            value = countValueForBasket(image.getBorderPixel(y, x, BorderType::MirrorBorder), angle, second.centerOfBasket, first.centerOfBasket);
-            second.value += value * findDistanceCoefficient(x, y);
+            int first = pair.first, second = pair.second;
+            double pixel = image.getBorderPixel(y, x, BorderType::MirrorBorder);
+            double value = countValueForBasket(pixel,
+                                               angle,
+                                               hystogramm.baskets[first], hystogramm.baskets[second]);
+            hystogramm.baskets[first].value += value * findDistanceCoefficient(x, y);
+            value = countValueForBasket(pixel,
+                                        angle,
+                                        hystogramm.baskets[second], hystogramm.baskets[first]);
+            hystogramm.baskets[second].value += value * findDistanceCoefficient(x, y);
         }
     }
     return hystogramm;
 }
 
-double Descriptor::countValueForBasket(double value, double angle, double center1, double center2) {
-    return value * abs(angle - center1) / abs(center2 - center1);
+double Descriptor::countValueForBasket(double value, double angle, Basket& basket1, Basket& basket2) {
+    return value * abs(basket2.getDistanceToCenter(angle)) / basket1.getDistanceToCenter(basket2.centerOfBasket);
 }
 
 double Descriptor::findDistanceCoefficient(int x, int y) {
-    return 1 - 0.03 * (abs(x - pointX) + abs(y - pointY));
+    return  1 - 0.03 * (abs(x - pointX) + abs(y - pointY));
 }
 
 double Descriptor::getDistance(const Descriptor& descriptor) const {

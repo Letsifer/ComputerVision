@@ -43,4 +43,6 @@ DISTFILES += \
     images/ lab1SobelY.jpg \
     images/ialta.jpg \
     images/image1.jpg \
-    images/image2.jpg
+    images/image2.jpg \
+    images/table1.jpg \
+    images/table2.jpg

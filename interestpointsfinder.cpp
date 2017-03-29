@@ -128,7 +128,7 @@ void InterestPointsFinder::adaptiveNonMaximumSuppression(
     }
     sort(points.begin(), points.end(),
          [](const auto &point1, const auto &point2) {
-        return point1.radiusToGreaterContrast - point2.radiusToGreaterContrast;
+        return point1.radiusToGreaterContrast > point2.radiusToGreaterContrast;
     });
     points.resize(necessaryPoints);
 }

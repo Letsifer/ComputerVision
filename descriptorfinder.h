@@ -8,7 +8,8 @@ using namespace std;
 struct Basket {
     double value;
     double centerOfBasket;
-    Basket() : value(0), centerOfBasket(0){};
+    Basket() : value(0), centerOfBasket(0){}
+    Basket(double center, double value) : value(value), centerOfBasket(center){}
     double getDistanceToCenter(double angle) const{
         double absolutDistance = abs(angle - centerOfBasket);
         return min(absolutDistance, 2 * M_PI - absolutDistance);
@@ -17,7 +18,7 @@ struct Basket {
 
 struct Hystogramm {
     unique_ptr<Basket[]> baskets;
-    int basketsNumber;
+    int basketsNumber;    
     Hystogramm(int basketsNumber) : basketsNumber(basketsNumber) {
         baskets = make_unique<Basket[]>((size_t)(basketsNumber));
         double basicValue = M_PI / basketsNumber;
@@ -30,7 +31,7 @@ struct Hystogramm {
         return baskets[i].value;
     }
 
-    pair<Basket&, Basket&> getNeighborsToPoint(double angle) const{
+    pair<int, int> getNeighborsToPoint(double angle) const{
         int indexOfMin = -1, indexOfSecondMin = -1;
         double minValue = numeric_limits<double>::max(), secondMinValue = minValue;
         for (int i = 0; i < basketsNumber; i++) {
@@ -47,7 +48,7 @@ struct Hystogramm {
                 secondMinValue = distanceToCenter;
             }
         }
-        return pair<Basket&, Basket&>(baskets[indexOfMin], baskets[indexOfSecondMin]);
+        return pair<int, int>(indexOfMin, indexOfSecondMin);
     }
 };
 
@@ -62,7 +63,7 @@ class Descriptor
                                        int width, int height,
                                        int basketsInHystogramm
                                        );
-    double countValueForBasket(double value, double angle, double center1, double center2);
+    double countValueForBasket(double value, double angle, Basket& basket1, Basket& basket2);
     double findDistanceCoefficient(int x, int y);
 public:
     Descriptor(const MyImage& image,
