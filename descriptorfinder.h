@@ -63,7 +63,7 @@ class Descriptor
                                        int width, int height,
                                        int basketsInHystogramm
                                        );
-    double countValueForBasket(double value, double angle, Basket& basket1, Basket& basket2);
+    double countValueForBasket(double value, double angle, const Basket& basket1, const Basket& basket2);
     double findDistanceCoefficient(int x, int y);
 public:
     Descriptor(const MyImage& image,
