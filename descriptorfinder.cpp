@@ -69,11 +69,11 @@ Hystogramm Descriptor::findHystogrammForRegion(const MyImage& image,
     return hystogramm;
 }
 
-double Descriptor::countValueForBasket(double value, double angle, const Basket& basket1,  const Basket& basket2) {
+double Descriptor::countValueForBasket(double value, double angle, const Basket& basket1,  const Basket& basket2) const{
     return value * abs(basket2.getDistanceToCenter(angle)) / basket1.getDistanceToCenter(basket2.centerOfBasket);
 }
 
-double Descriptor::findDistanceCoefficient(int x, int y) {
+double Descriptor::findDistanceCoefficient(int x, int y) const{
     return  1 - 0.03 * (abs(x - pointX) + abs(y - pointY));
 }
 
