@@ -187,7 +187,7 @@ void MainWindow::lab4() {
 
 vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points) {
     const double contrastHarrisBorder = 4;
-    const int regionsX = 4, regionsY = 4, sizeOfNetwork = 16, binsInHistogram = 8, windowSize = 7;
+    const int regionsX = 4, regionsY = 4, sizeOfGrid = 16, binsInHistogram = 8, windowSize = 7;
     auto pointVector = InterestPointsFinder::harrisAlgorithm(image, windowSize, contrastHarrisBorder, BorderType::MirrorBorder);
     InterestPointsFinder::adaptiveNonMaximumSuppression(
                 pointVector, points
@@ -199,7 +199,7 @@ vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points) {
         descriptors.emplace_back(sobelX, sobelY,
                                  point.x, point.y,
                                  regionsX, regionsY,
-                                 sizeOfNetwork, sizeOfNetwork,
+                                 sizeOfGrid, sizeOfGrid,
                                  binsInHistogram);
     }
     return descriptors;
