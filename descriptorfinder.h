@@ -5,37 +5,37 @@
 #include <iostream>
 using namespace std;
 
-struct Basket {
+struct Bin {
     double value;
-    double centerOfBasket;
-    Basket() : value(0), centerOfBasket(0){}
-    Basket(double center, double value) : value(value), centerOfBasket(center){}
+    double centerOfBin;
+    Bin() : value(0), centerOfBin(0){}
+    Bin(double center, double value) : value(value), centerOfBin(center){}
     double getDistanceToCenter(double angle) const{
-        double absolutDistance = abs(angle - centerOfBasket);
+        double absolutDistance = abs(angle - centerOfBin);
         return min(absolutDistance, 2 * M_PI - absolutDistance);
     }
 };
 
-struct Hystogramm {
-    unique_ptr<Basket[]> baskets;
-    int basketsNumber;    
-    Hystogramm(int basketsNumber) : basketsNumber(basketsNumber) {
-        baskets = make_unique<Basket[]>((size_t)(basketsNumber));
-        double basicValue = M_PI / basketsNumber;
-        for (int i = 0; i < basketsNumber; i++) {
-            baskets[i].centerOfBasket = (2 * i + 1) * basicValue;
+struct Histogram {
+    unique_ptr<Bin[]> bins;
+    int binsNumber;
+    Histogram(int binsNumber) : binsNumber(binsNumber) {
+        bins = make_unique<Bin[]>((size_t)(binsNumber));
+        double basicValue = M_PI / binsNumber;
+        for (int i = 0; i < binsNumber; i++) {
+            bins[i].centerOfBin = (2 * i + 1) * basicValue;
         }
     }
 
-    double getBasketValue(int i) const{
-        return baskets[i].value;
+    double getBinValue(int i) const{
+        return bins[i].value;
     }
 
     pair<int, int> getNeighborsToPoint(double angle) const{
         int indexOfMin = -1, indexOfSecondMin = -1;
         double minValue = numeric_limits<double>::max(), secondMinValue = minValue;
-        for (int i = 0; i < basketsNumber; i++) {
-            double distanceToCenter = baskets[i].getDistanceToCenter(angle);
+        for (int i = 0; i < binsNumber; i++) {
+            double distanceToCenter = bins[i].getDistanceToCenter(angle);
             if (minValue > distanceToCenter) {
                 indexOfSecondMin = indexOfMin;
                 secondMinValue = minValue;
@@ -58,18 +58,13 @@ class Descriptor
     unique_ptr<double[]> elements;
     int sizeOfDescriptor;
     void normalize();
-    Hystogramm findHystogrammForRegion(const MyImage& image,
-                                       int leftX, int topY,
-                                       int width, int height,
-                                       int basketsInHystogramm
-                                       );
-    double countValueForBasket(double value, double angle, const Basket& basket1, const Basket& basket2) const;
+    double findAngleCoefficient(double angle, const Bin& bin1, const Bin& bin2) const;
     double findDistanceCoefficient(int x, int y) const;
 public:
-    Descriptor(const MyImage& image,
+    Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                int pointX, int pointY,
                int regionsX, int regionsY,
-               int sizeOfRegionX, int sizeOfRegionY,
+               int sizeOfNetworkX, int sizeOfNetworkY,
                int basketsInHystogramm
                );
     int getPointX() const {return pointX;}

@@ -1,26 +1,55 @@
 #include "descriptorfinder.h"
 
 
-Descriptor::Descriptor(const MyImage& image,
+Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                        int pointX, int pointY,
                        int regionsX, int regionsY,
-                       int sizeOfRegionX, int sizeOfRegionY,
-                       int basketsInHystogramm
+                       int sizeOfNetworkX, int sizeOfNetworkY,
+                       int binsInHistogram
                        ) : pointX(pointX), pointY(pointY) {
     const double NORMALIZE_THRESHOLD = 0.2;
-    sizeOfDescriptor = regionsX * regionsY * basketsInHystogramm;
+    sizeOfDescriptor = regionsX * regionsY * binsInHistogram;
     elements = make_unique<double[]>((size_t)(sizeOfDescriptor));
-    int leftX = pointX + 1 - regionsX / 2 * sizeOfRegionX,
-         topY = pointY + 1 - regionsY / 2 * sizeOfRegionY;
-    for (int i = 0, cnt = 0; i < regionsX; i++) {
-        for (int j = 0; j < regionsY; j++) {
-            Hystogramm hystogramm = findHystogrammForRegion(image, leftX + sizeOfRegionX * j, topY + sizeOfRegionY * i, sizeOfRegionX, sizeOfRegionY, basketsInHystogramm);
-            for (int k = 0; k < basketsInHystogramm; k++) {
-                double value =  hystogramm.getBasketValue(k);
-                elements[cnt++] = value;
+    vector<Histogram> histograms;
+    for (int i = 0; i < regionsX * regionsY; i++) {
+        histograms.emplace_back(binsInHistogram);
+    }
+
+    for (int i = 0; i < sizeOfNetworkY; i++) {
+        for (int j = 0; j < sizeOfNetworkX; j++) {
+            int x = pointX + j - sizeOfNetworkX / 2 + 1,
+                y = pointY + i - sizeOfNetworkY / 2 + 1;
+            int histogramIndexX = j / regionsX, histogramIndexY = i / regionsY;
+            int histogramIndex = histogramIndexY * regionsX + histogramIndexX;
+            double dx = sobelX.getBorderPixel(y, x, BorderType::MirrorBorder),
+                    dy = sobelY.getBorderPixel(y, x, BorderType::MirrorBorder);
+            double angle = atan2(dy, dx);
+            if (angle < 0) {
+                angle += 2 * M_PI;
             }
+            auto pair = histograms[histogramIndex].getNeighborsToPoint(angle);
+            int first = pair.first, second = pair.second;
+            double pixel = sqrt(dx*dx+dy*dy);
+            double value = pixel * findAngleCoefficient(angle,
+                                               histograms[histogramIndex].bins[first],
+                                               histograms[histogramIndex].bins[second]);
+            value *= findDistanceCoefficient(x, y);
+            histograms[histogramIndex].bins[first].value += value;
+
+            value = pixel * findAngleCoefficient(angle,
+                                        histograms[histogramIndex].bins[second],
+                                        histograms[histogramIndex].bins[first]);
+            value *= findDistanceCoefficient(x, y);
+            histograms[histogramIndex].bins[second].value += value;
         }
     }
+
+    for (int i = 0, cnt = 0; i < regionsX * regionsY; i++) {
+        for (int j = 0; j < binsInHistogram; j++) {
+            elements[cnt++] = histograms[i].getBinValue(j);
+        }
+    }
+
     normalize();
     for (int i = 0; i < sizeOfDescriptor; i++) {
         elements[i] = min(elements[i], NORMALIZE_THRESHOLD);
@@ -39,38 +68,8 @@ void Descriptor::normalize() {
     }
 }
 
-Hystogramm Descriptor::findHystogrammForRegion(const MyImage& image,
-                                               int leftX, int topY,
-                                               int width, int height,
-                                               const int basketsInHystogramm
-                                   ) {
-    Hystogramm hystogramm = Hystogramm(basketsInHystogramm);
-    int xCenterOfRegion = leftX + width / 2, yCenterOfRegion = topY + height / 2;
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            int x = leftX + j, y = topY + i;
-            double angle = atan2(y - yCenterOfRegion, x - xCenterOfRegion);
-            if (angle < 0) {
-                angle += 2 * M_PI;
-            }
-            auto pair = hystogramm.getNeighborsToPoint(angle);
-            int first = pair.first, second = pair.second;
-            double pixel = image.getBorderPixel(y, x, BorderType::MirrorBorder);
-            double value = countValueForBasket(pixel,
-                                               angle,
-                                               hystogramm.baskets[first], hystogramm.baskets[second]);
-            hystogramm.baskets[first].value += value * findDistanceCoefficient(x, y);
-            value = countValueForBasket(pixel,
-                                        angle,
-                                        hystogramm.baskets[second], hystogramm.baskets[first]);
-            hystogramm.baskets[second].value += value * findDistanceCoefficient(x, y);
-        }
-    }
-    return hystogramm;
-}
-
-double Descriptor::countValueForBasket(double value, double angle, const Basket& basket1,  const Basket& basket2) const{
-    return value * abs(basket2.getDistanceToCenter(angle)) / basket1.getDistanceToCenter(basket2.centerOfBasket);
+double Descriptor::findAngleCoefficient(double angle, const Bin& bin1,  const Bin& bin2) const{
+    return abs(bin2.getDistanceToCenter(angle)) / bin1.getDistanceToCenter(bin2.centerOfBin);
 }
 
 double Descriptor::findDistanceCoefficient(int x, int y) const{
