@@ -1,4 +1,5 @@
 #include <memory>
+#include <cmath>
 using namespace std;
 #ifndef KERNEL_H
 #define KERNEL_H
@@ -24,6 +25,11 @@ public:
     }
     double getElementInRelationToCenter(int pushX, int pushY) const{
         return getElement(getKernelHalfHeight() + pushY, getKernelHalfWidth() + pushX);
+    }
+
+    static double canculateGaussInOnePoint(double sigma, int x, int y) {
+        double sigmaSqr = 2 * sigma * sigma;
+        return exp(-(x*x + y*y) / sigmaSqr) / (M_PI * sigmaSqr);
     }
 
     static Kernel createXSobelKernel();

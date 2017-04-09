@@ -113,20 +113,42 @@ void MainWindow::printForThirdLab(QImage image, const vector<InterestingPoint> p
     image.save(dir.absoluteFilePath(filename), "jpg");
 }
 
-void MainWindow::lab4() {
-    QDir dir ("../ComputerVision/images");
-    QDir().mkdir("../images/lab4");
-    QDir dir2 ("../images/lab4");
-    ui->label->setText(dir2.absolutePath().append(" - all images are there"));
-    const int points = 70;
+void MainWindow::showDescriptorInfo(const Descriptor &desc, QPainter& painter, const int xShift) {
+    int length = 25;
+    QPen pen = QPen(QColor(0, 255, 0));
+    pen.setWidth(3);
+    painter.setPen(pen);
+    int x1 = desc.getPointX() + xShift, y1 = desc.getPointY();
+    painter.drawEllipse(x1, y1, 5, 5);
 
-    QString imageName1("table1.jpg");
-    QImage qImage1 = QPixmap(dir.absoluteFilePath(imageName1)).toImage();
+    double angle = desc.getRotatedAngle();
+    int x3 = x1 + length * cos(angle),
+        y3 = y1 + length * sin(angle);
+    painter.drawLine(x1, y1, x3, y3);
+
+    pen = QPen(QColor(0, 0, 255));
+    pen.setWidth(3);
+    painter.setPen(pen);
+    if (y3 < 0) {
+        y3 = -y3;
+    }
+    painter.drawText(x3, y3, QString::number(angle));
+}
+
+void MainWindow::lab4() {
+    QDir inputImagesDir ("../ComputerVision/images");
+    QDir().mkdir("../images/lab4");
+    QDir outputDir ("../images/lab4");
+    ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
+    const int points = 100;
+
+    QString imageName1("lena-min-for30-0");
+    QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
     MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
     auto firstVector = findPoints(image1, points);
 
-    QString imageName2("table2.jpg");
-    QImage qImage2 = QPixmap(dir.absoluteFilePath(imageName2)).toImage();
+    QString imageName2("lena-min-for30-30");
+    QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
     MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
     auto secondVector = findPoints(image2, points);
 
@@ -146,8 +168,15 @@ void MainWindow::lab4() {
     }
 
     QPainter painter(&result);
+    QPen pen = QPen();
+    pen.setWidth(2);
+    painter.setPen(pen);
     int color = 0;
     const double T = 0.8;
+    QColor red = QColor(255, 0, 0),
+           green = QColor(0, 255, 0),
+           blue = QColor(0, 0, 255),
+           black = QColor(0, 0, 0);
     for (unsigned int i = 0; i < firstVector.size(); i++) {
         double minDistance = numeric_limits<double>::max(), secondMinDistance = minDistance;
         int indexMin = -1;
@@ -166,13 +195,24 @@ void MainWindow::lab4() {
         double rate = minDistance / secondMinDistance;
         if (rate <= T) {
             switch (color) {
-            case 0: painter.setPen(QColor(255, 0, 0));
+            case 0:
+                pen.setColor(red);
+                painter.setPen(pen);
                 color++;
                 break;
-            case 1: painter.setPen(QColor(0, 255, 0));
+            case 1:
+                pen.setColor(blue);
+                painter.setPen(pen);
                 color++;
                 break;
-            case 2: painter.setPen(QColor(0, 0, 255));
+            case 2:
+                pen.setColor(green);
+                painter.setPen(pen);
+                color++;
+                break;
+            case 3:
+                pen.setColor(black);
+                painter.setPen(pen);
                 color = 0;
                 break;
             }
@@ -182,12 +222,13 @@ void MainWindow::lab4() {
             painter.drawLine(x1, y1, x2, y2);
         }
     }
-    result.save(dir2.absoluteFilePath("lab4-result.jpg"), "jpg");
+    result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
 }
 
 vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points) {
-    const double contrastHarrisBorder = 4;
+    const double contrastHarrisBorder = 0.01;
     const int regionsX = 4, regionsY = 4, sizeOfGrid = 16, binsInHistogram = 8, windowSize = 7;
+    const int manyBins = 36;
     auto pointVector = InterestPointsFinder::harrisAlgorithm(image, windowSize, contrastHarrisBorder, BorderType::MirrorBorder);
     InterestPointsFinder::adaptiveNonMaximumSuppression(
                 pointVector, points
@@ -196,11 +237,16 @@ vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points) {
             sobelY = image.convoluton(Kernel::createYSobelKernel(), BorderType::MirrorBorder);
     vector<Descriptor> descriptors;
     for (InterestingPoint point : pointVector) {
-        descriptors.emplace_back(sobelX, sobelY,
-                                 point.x, point.y,
-                                 regionsX, regionsY,
-                                 sizeOfGrid, sizeOfGrid,
-                                 binsInHistogram);
+        auto added = Descriptor::createOrientedDescriptors(
+                    sobelX, sobelY,
+                    point.x, point.y,
+                    regionsX, regionsY,
+                    sizeOfGrid, sizeOfGrid,
+                    binsInHistogram, manyBins);
+        descriptors.push_back(added[0]);
+        if (added.size() == 2) {
+            descriptors.push_back(added[1]);
+        }
     }
     return descriptors;
 }

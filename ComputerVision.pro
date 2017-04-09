@@ -42,7 +42,23 @@ DISTFILES += \
     images/ lab1SobelX.jpg \
     images/ lab1SobelY.jpg \
     images/ialta.jpg \
-    images/image1.jpg \
-    images/image2.jpg \
     images/table1.jpg \
-    images/table2.jpg
+    images/table2.jpg \
+    images/table3.jpg \
+    images/table4.jpg \
+    images/table5.jpg \
+    images/table6.jpg \
+    images/1.png \
+    images/2.png \
+    images/lena.jpg \
+    images/lena90.jpg \
+    images/lena180.jpg \
+    images/lena-min.jpg \
+    images/lena-min-for30-0.jpg \
+    images/lena-min-for30-30.jpg \
+    images/lena-min-for45-0.jpg \
+    images/lena-min-for45-45.jpg \
+    images/lena-min-for5-0.jpg \
+    images/lena-min-for5-5.jpg \
+    images/lena-min-for60-0.jpg \
+    images/lena-min-for60-60.jpg

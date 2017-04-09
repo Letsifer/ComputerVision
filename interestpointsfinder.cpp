@@ -24,9 +24,10 @@ vector<InterestingPoint> InterestPointsFinder::harrisAlgorithm(
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             double A = 0, B = 0, C = 0;
-            for (int u = -halfWidthOfKernel; u < halfWidthOfKernel; u++) {
-                for (int v = -halfWidthOfKernel; v < halfWidthOfKernel; v++) {
-                    double fromGauss = 1 - 0.03 * (abs(u) + abs(v)),
+            for (int u = -halfWidthOfKernel; u <= halfWidthOfKernel; u++) {
+                for (int v = -halfWidthOfKernel; v <= halfWidthOfKernel; v++) {
+                    int sigma = windowSize / 6;
+                    double fromGauss = Kernel::canculateGaussInOnePoint(sigma, u, v),
                            fromGradientX = gradientX.getBorderPixel(i + u, j + v, type),
                            fromGradientY = gradientY.getBorderPixel(i + u, j + v, type);
                     A += fromGauss * fromGradientX * fromGradientX;
@@ -115,7 +116,7 @@ void InterestPointsFinder::adaptiveNonMaximumSuppression(
     if (points.size() <= necessaryPoints) {
         return;
     }
-    const double filterCoefficient = 0.9;
+    const double filterCoefficient = 1;
     for (unsigned int i = 0; i < points.size(); i++) {
         for (unsigned int j = 0; j < points.size(); j++) {
             if (i == j) {
