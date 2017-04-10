@@ -25,7 +25,9 @@ vector<Descriptor> Descriptor::createOrientedDescriptors(
             indexOfSecondMax = i;
         }
     }
-    double angle = notOriented.centersOfBins[indexOfMax];
+
+
+    double angle = notOriented.calculateAngle(indexOfMax, manyBinsNumber);
     vector<Descriptor> descs;
     descs.emplace_back(sobelX, sobelY,
                        pointX, pointY,
@@ -36,7 +38,7 @@ vector<Descriptor> Descriptor::createOrientedDescriptors(
     double maxValue = notOriented.getElement(indexOfMax),
            secondMaxValue = notOriented.getElement(indexOfSecondMax);
     if (maxValue * BORDER_OF_CHOOSING_SECOND_PICK <= secondMaxValue) {
-        angle = notOriented.centersOfBins[indexOfSecondMax];
+        angle = notOriented.calculateAngle(indexOfSecondMax, manyBinsNumber);
         descs.emplace_back(sobelX, sobelY,
                            pointX, pointY,
                            regionsX, regionsY,
@@ -45,6 +47,15 @@ vector<Descriptor> Descriptor::createOrientedDescriptors(
                            );
     }
     return descs;
+}
+
+double Descriptor::calculateAngle(const int index, const int binsNumber) const {
+    double left = elements[(index - 1 + binsNumber) % binsNumber];
+    double center = elements[index];
+    double right = elements[(index + 1) % binsNumber];
+    double x = -0.5 * (right - left) / (left - 2.0 * center + right);
+    double angle = 2.0 * M_PI * (x + 0.5 + index) / binsNumber;
+    return angle;
 }
 
 Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
@@ -61,8 +72,8 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
         elements[i] = 0;
     }
 
-    this->binsNumber = binsInHistogram;
-    centersOfBins = make_unique<double[]>((size_t)(binsNumber));
+    int binsNumber = binsInHistogram;
+    unique_ptr<double[]> centersOfBins = make_unique<double[]>((size_t)(binsNumber));
     double basicValue = M_PI / binsNumber;
     for (int i = 0; i < binsNumber; i++) {
         centersOfBins[i] = (2 * i + 1) * basicValue;
@@ -92,7 +103,7 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
             double dx = sobelX.getBorderPixel(y, x, BorderType::MirrorBorder),
                    dy = sobelY.getBorderPixel(y, x, BorderType::MirrorBorder);
             double angle = getAngle(dx, dy, angleShift);
-            auto pair = getNeighborsToPoint(angle);
+            auto pair = getNeighborsToPoint(angle, binsNumber, centersOfBins);
             int first = pair.first, second = pair.second;
             double pixel = sqrt(dx*dx+dy*dy) * findDistanceCoefficient(x, y, sizeOfGridX);
             elements[regionsIndex * binsNumber + first] += pixel
@@ -128,8 +139,7 @@ double Descriptor::findAngleCoefficient(double angle, double center1, double cen
 }
 
 double Descriptor::findDistanceCoefficient(int x, int y, int gridSize) const {
-    return max(1 - 0.03 * (abs(x - pointX) + abs(y - pointY)), 0.0);
-//    return Kernel::canculateGaussInOnePoint(gridSize / 6, x - pointX, y - pointY);
+    return Kernel::canculateGaussInOnePoint(gridSize / 6, x - pointX, y - pointY);
 }
 
 double Descriptor::getDistance(const Descriptor& descriptor) const {
@@ -146,11 +156,12 @@ double Descriptor::getDistanceToCenterOfBin(double center, double angle) const{
     return min(absolutDistance, 2 * M_PI - absolutDistance);
 }
 
-pair<int, int> Descriptor::getNeighborsToPoint(double angle) const {
+pair<int, int> Descriptor::getNeighborsToPoint(const double angle, int binsNumber,
+                                               const unique_ptr<double[]>& centers) const {
     int indexOfMin = -1, indexOfSecondMin = -1;
     double minValue = numeric_limits<double>::max(), secondMinValue = minValue;
     for (int i = 0; i < binsNumber; i++) {
-        double distanceToCenter = getDistanceToCenterOfBin(centersOfBins[i], angle);
+        double distanceToCenter = getDistanceToCenterOfBin(centers[i], angle);
         if (minValue > distanceToCenter) {
             indexOfSecondMin = indexOfMin;
             secondMinValue = minValue;

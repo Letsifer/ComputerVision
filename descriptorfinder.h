@@ -16,14 +16,11 @@ class Descriptor
     int sizeOfDescriptor;
     unique_ptr<double[]> elements;
 
-    int binsNumber;
-    unique_ptr<double[]> centersOfBins;
-
     void normalize();
     double findAngleCoefficient(double angle, double center1, double center2) const;
     double findDistanceCoefficient(int x, int y, int gridSize) const;
     double getAngle(double dx, double dy, double angleShift) const {
-        double angle = atan2(dy, dx) - angleShift;
+        double angle = atan2(dy, dx) - angleShift + M_PI;
         if (angle < 0) {
             angle += 2 * M_PI;
         }
@@ -34,7 +31,8 @@ class Descriptor
     }
 
     double getDistanceToCenterOfBin(double center, double angle) const;
-    pair<int, int> getNeighborsToPoint(double angle) const;
+    pair<int, int> getNeighborsToPoint(double angle, int binsNumber, const unique_ptr<double[]>& centers) const;
+    double calculateAngle(int index, int manyBinsNumber) const;
 public:
     double getRotatedAngle() const {
         return rotatedAngle;
@@ -74,12 +72,6 @@ public:
         elements = make_unique<double[]>((size_t)(sizeOfDescriptor));
         for (int i = 0; i < sizeOfDescriptor; i++) {
             elements[i] = sample.elements[i];
-        }
-
-        binsNumber = sample.binsNumber;
-        centersOfBins = make_unique<double[]>((size_t)(binsNumber));
-        for (int i = 0; i < binsNumber; i++) {
-            centersOfBins[i] = sample.centersOfBins[i];
         }
     }
 };

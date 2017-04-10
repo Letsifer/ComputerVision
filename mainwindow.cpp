@@ -142,12 +142,12 @@ void MainWindow::lab4() {
     ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
     const int points = 100;
 
-    QString imageName1("lena-min-for30-0");
+    QString imageName1("lena-min-for45-0");
     QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
     MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
     auto firstVector = findPoints(image1, points);
 
-    QString imageName2("lena-min-for30-30");
+    QString imageName2("lena-min-for45-45");
     QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
     MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
     auto secondVector = findPoints(image2, points);
