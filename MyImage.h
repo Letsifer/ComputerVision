@@ -16,7 +16,7 @@ class MyImage
     unique_ptr<double[]> pixels;
 
 
-    double pixelConvolution(int y, int x, const Kernel& kernel, const BorderType borderType) const;
+
     bool isXInRange(int value) const{
         return value >= 0 && value < width;
     }
@@ -44,11 +44,13 @@ public:
     double getBorderPixel(int i, int j, const BorderType borderType) const;
     void setPixel(int i, int j, double value);
     MyImage convoluton(const Kernel& kernel, BorderType borderType) const;
+    double pixelConvolution(int y, int x, const Kernel& kernel, const BorderType borderType) const;
     MyImage normalize(double newMin, double newMax) const;
     MyImage countHypotenuse(const MyImage& other) const;
     bool save(const QString filename);
     QImage createQImageFromImage();
     MyImage divideImage() const;
+    MyImage subtract(const MyImage other) const;
 };
 
 #endif // IMAGE_H

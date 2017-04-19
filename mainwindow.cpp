@@ -52,8 +52,7 @@ void MainWindow::lab2() {
     QImage image = pix.toImage();
     auto mine = MyImage::createMyImageFromQImage(image);
     const int scalesInOctave = 5, octaves = 3;
-    const double basicSigma = 0.5;
-    Pyramid pyramid = Pyramid(mine, basicSigma, octaves, scalesInOctave);
+    Pyramid pyramid = Pyramid(mine, octaves, scalesInOctave);
     pyramid.savePyramid(name.append(QString::fromStdString("lab2-")));
     QDir dir2 ("../images");
     ui->label->setText(dir2.absolutePath().append(" - all images are there"));
@@ -113,44 +112,21 @@ void MainWindow::printForThirdLab(QImage image, const vector<InterestingPoint> p
     image.save(dir.absoluteFilePath(filename), "jpg");
 }
 
-void MainWindow::showDescriptorInfo(const Descriptor &desc, QPainter& painter, const int xShift) {
-    int length = 25;
-    QPen pen = QPen(QColor(0, 255, 0));
-    pen.setWidth(3);
-    painter.setPen(pen);
-    int x1 = desc.getPointX() + xShift, y1 = desc.getPointY();
-    painter.drawEllipse(x1, y1, 5, 5);
-
-    double angle = desc.getRotatedAngle();
-    int x3 = x1 + length * cos(angle),
-        y3 = y1 + length * sin(angle);
-    painter.drawLine(x1, y1, x3, y3);
-
-    pen = QPen(QColor(0, 0, 255));
-    pen.setWidth(3);
-    painter.setPen(pen);
-    if (y3 < 0) {
-        y3 = -y3;
-    }
-    painter.drawText(x3, y3, QString::number(angle));
-}
-
 void MainWindow::lab4() {
     QDir inputImagesDir ("../ComputerVision/images");
-    QDir().mkdir("../images/lab4");
-    QDir outputDir ("../images/lab4");
+    QDir().mkdir("../images/lab6");
+    QDir outputDir ("../images/lab6");
     ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
-    const int points = 100;
 
-    QString imageName1("lena-min-for45-0");
-    QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
-    MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
-    auto firstVector = findPoints(image1, points);
+    const QString imageName1("lena");
+    const QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
+    const MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
+    const auto firstVector = findPoints(image1);
 
-    QString imageName2("lena-min-for45-45");
-    QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
-    MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
-    auto secondVector = findPoints(image2, points);
+    const QString imageName2("lena-min-for30-30");
+    const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
+    const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
+    auto secondVector = findPoints(image2);
 
     QImage result = QImage(image1.getWidth() + image2.getWidth(),
                            max(image1.getHeight(), image2.getHeight()),
@@ -192,71 +168,104 @@ void MainWindow::lab4() {
                 secondMinDistance = distance;
             }
         }
-        double rate = minDistance / secondMinDistance;
+        const double rate = minDistance / secondMinDistance;
         if (rate <= T) {
             switch (color) {
             case 0:
                 pen.setColor(red);
-                painter.setPen(pen);
                 color++;
                 break;
             case 1:
                 pen.setColor(blue);
-                painter.setPen(pen);
                 color++;
                 break;
             case 2:
                 pen.setColor(green);
-                painter.setPen(pen);
                 color++;
                 break;
             case 3:
                 pen.setColor(black);
-                painter.setPen(pen);
                 color = 0;
                 break;
             }
-
-            int x1 = firstVector[i].getPointX(), y1 = firstVector[i].getPointY(),
-                x2 = secondVector[indexMin].getPointX() + qImage1.width(), y2 = secondVector[indexMin].getPointY();
+            painter.setPen(pen);
+            const int x1 = firstVector[i].getPointX(),
+                      y1 = firstVector[i].getPointY(),
+                      x2 = secondVector[indexMin].getPointX() + qImage1.width(),
+                      y2 = secondVector[indexMin].getPointY();
             painter.drawLine(x1, y1, x2, y2);
         }
     }
     result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
 }
-
-vector<Descriptor> MainWindow::findPoints(const MyImage& image, int points) {
-    const double contrastHarrisBorder = 0.01;
-    const int regionsX = 4, regionsY = 4, sizeOfGrid = 16, binsInHistogram = 8, windowSize = 7;
-    const int manyBins = 36;
-    auto pointVector = InterestPointsFinder::harrisAlgorithm(image, windowSize, contrastHarrisBorder, BorderType::MirrorBorder);
-    InterestPointsFinder::adaptiveNonMaximumSuppression(
-                pointVector, points
-                );
-    MyImage sobelX = image.convoluton(Kernel::createXSobelKernel(), BorderType::MirrorBorder),
-            sobelY = image.convoluton(Kernel::createYSobelKernel(), BorderType::MirrorBorder);
+vector<Descriptor> MainWindow::findPoints(const MyImage& image) {
+    const double harrisThreshold = 0.0008;
+    const int scalesInOctave = 3, octaves = 5;
+    const Pyramid pyramid = Pyramid(image, octaves, scalesInOctave);
+    const auto centers = pyramid.createDogPyramid().findExtremums();
+    const MyImage sobelX = image.convoluton(Kernel::createXSobelKernel(), BorderType::MirrorBorder),
+                  sobelY = image.convoluton(Kernel::createYSobelKernel(), BorderType::MirrorBorder);
     vector<Descriptor> descriptors;
-    for (InterestingPoint point : pointVector) {
-        auto added = Descriptor::createOrientedDescriptors(
-                    sobelX, sobelY,
-                    point.x, point.y,
-                    regionsX, regionsY,
-                    sizeOfGrid, sizeOfGrid,
-                    binsInHistogram, manyBins);
-        descriptors.push_back(added[0]);
-        if (added.size() == 2) {
-            descriptors.push_back(added[1]);
+    for (const BlobsCenter& center : centers) {
+        const double harrisValue = InterestPointsFinder::computeHarrisInOnePoint(
+                    pyramid.getElement(center.octave, center.scale).image,
+                    center.y, center.x, center.sigma * M_SQRT2
+                    );
+        if (harrisValue > harrisThreshold) {
+            const double sizeFactor = pow(2.0, center.octave);
+            const double sigma = center.sigma * M_SQRT2 * sizeFactor;
+            auto added = Descriptor::createOrientedDescriptors(
+                        sobelX, sobelY,
+                        center.x * sizeFactor, center.y * sizeFactor,
+                        sigma);
+            descriptors.insert(descriptors.end(), added.begin(), added.end());
         }
     }
     return descriptors;
 }
 
+void MainWindow::findBlobs() {
+    QDir inputImagesDir ("../ComputerVision/images");
+    QDir().mkdir("../images/lab6");
+    QDir outputDir ("../images/lab6");
+    ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
+
+    const QString imageName1("rounds");
+    QImage qImage = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
+    const MyImage image = MyImage::createMyImageFromQImage(qImage);
+    const int scalesInOctave = 3, octaves = 5;
+    const Pyramid pyramid = Pyramid(image, octaves, scalesInOctave);
+    auto centers = pyramid.createDogPyramid().findExtremums();
+
+    const double harrisThreshold = 0.001;
+    QPainter painter(&qImage);
+    QPen pen = QPen();
+    pen.setWidth(1);
+    pen.setColor(QColor(0, 255, 0));
+    painter.setPen(pen);
+    for (const BlobsCenter& center : centers) {
+        const double radius = center.sigma * M_SQRT2;
+        const double harrisValue = InterestPointsFinder::computeHarrisInOnePoint(
+                    pyramid.getElement(center.octave, center.scale).image,
+                    center.y, center.x, radius
+                    );
+        if (harrisValue > harrisThreshold) {
+            const double sizeFactor = pow(2.0, center.octave);
+            const double realRedius = radius * sizeFactor;
+            painter.setPen(pen);
+            painter.drawEllipse(QPointF(center.x * sizeFactor, center.y * sizeFactor),
+                                realRedius, realRedius);
+        }
+    }
+    qImage.save(outputDir.absoluteFilePath(imageName1 + ".jpg"), "jpg");
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+//    findBlobs();
     lab4();
 }
 

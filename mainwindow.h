@@ -26,8 +26,9 @@ class MainWindow : public QMainWindow
     void printForThirdLab(QImage image, const vector<InterestingPoint> points, const QString filename);
 
     void lab4();
-    void showDescriptorInfo(const Descriptor& desc, QPainter& painter, int xShift);
-    vector<Descriptor> findPoints(const MyImage& image, int points);
+    vector<Descriptor> findPoints(const MyImage& image);
+
+    void findBlobs();
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();

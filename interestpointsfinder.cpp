@@ -1,4 +1,5 @@
 #include "interestpointsfinder.h"
+#include <qdebug.h>
 
 vector<InterestingPoint> InterestPointsFinder::moravecAlgorithm(
             const MyImage& image, const int windowsShift,
@@ -10,38 +11,6 @@ vector<InterestingPoint> InterestPointsFinder::moravecAlgorithm(
                 image, windowsShift, halfSizeOfWindow, type
                 );
     return findInteresingPointsFromContrastImage(contrastImage, contrastBorder, type, halfSizeOfWindow);
-}
-
-vector<InterestingPoint> InterestPointsFinder::harrisAlgorithm(
-            const MyImage& image, const int windowSize, const double contrastBorder, const BorderType type
-            ) {
-    auto gradientX = image.convoluton(Kernel::createXSobelKernel(), type);
-    auto gradientY = image.convoluton(Kernel::createYSobelKernel(), type);
-    const int height = image.getHeight(), width = image.getWidth();
-    MyImage contrastImage = MyImage(height, width);
-    const double k = 0.06;
-    const int halfWidthOfKernel = windowSize / 2;
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            double A = 0, B = 0, C = 0;
-            for (int u = -halfWidthOfKernel; u <= halfWidthOfKernel; u++) {
-                for (int v = -halfWidthOfKernel; v <= halfWidthOfKernel; v++) {
-                    int sigma = windowSize / 6;
-                    double fromGauss = Kernel::canculateGaussInOnePoint(sigma, u, v),
-                           fromGradientX = gradientX.getBorderPixel(i + u, j + v, type),
-                           fromGradientY = gradientY.getBorderPixel(i + u, j + v, type);
-                    A += fromGauss * fromGradientX * fromGradientX;
-                    B += fromGauss * fromGradientX * fromGradientY;
-                    C += fromGauss * fromGradientY * fromGradientY;
-                }
-            }
-            const double determinant = A * C - B * B,
-                         trace = A + C;
-            double contrast = determinant - k * trace * trace;
-            contrastImage.setPixel(i, j, contrast);
-        }
-    }
-    return findInteresingPointsFromContrastImage(contrastImage, contrastBorder, type, halfWidthOfKernel);
 }
 
 MyImage InterestPointsFinder::findContrastsImageForMoravecAlgorithm(
@@ -74,6 +43,64 @@ MyImage InterestPointsFinder::findContrastsImageForMoravecAlgorithm(
         }
     }
     return result;
+}
+
+double InterestPointsFinder::computeHarrisInOnePoint(const MyImage &image,
+                                                     const int i, const int j, const double sigma) {
+    auto gauss = Kernel::createGaussKernel(sigma);
+    auto kernelSobelX = Kernel::createXSobelKernel(),
+         kernelSobelY = Kernel::createYSobelKernel();
+    const double k = 0.06;
+    double A = 0, B = 0, C = 0;
+    const int halfWidthOfKernel = gauss.getWIdth() / 2;
+    for (int u = -halfWidthOfKernel; u <= halfWidthOfKernel; u++) {
+        for (int v = -halfWidthOfKernel; v <= halfWidthOfKernel; v++) {
+            double fromGauss = gauss.getElementInRelationToCenter(v, u),
+                   fromGradientX = image.pixelConvolution(i + u, j + v, kernelSobelX, BorderType::MirrorBorder),
+                   fromGradientY = image.pixelConvolution(i + u, j + v, kernelSobelY, BorderType::MirrorBorder);
+            A += fromGauss * fromGradientX * fromGradientX;
+            B += fromGauss * fromGradientX * fromGradientY;
+            C += fromGauss * fromGradientY * fromGradientY;
+        }
+    }
+//    double descr = sqrt((A - C) * (A - C) + 4*B*B);
+//    return min(abs((A + C - descr) / 2), abs((A + C + descr)/ 2));
+
+    const double determinant = A * C - B * B,
+                 trace = A + C;
+    double contrast = determinant - k * trace * trace;
+    return abs(contrast);
+}
+
+vector<InterestingPoint> InterestPointsFinder::harrisAlgorithm(
+            const MyImage& image, const int windowSize, const double contrastBorder, const BorderType type
+            ) {
+    auto gradientX = image.convoluton(Kernel::createXSobelKernel(), type);
+    auto gradientY = image.convoluton(Kernel::createYSobelKernel(), type);
+    const int height = image.getHeight(), width = image.getWidth();
+    MyImage contrastImage = MyImage(height, width);
+    const double k = 0.06;
+    const int halfWidthOfKernel = windowSize / 2;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            double A = 0, B = 0, C = 0;
+            for (int u = -halfWidthOfKernel; u <= halfWidthOfKernel; u++) {
+                for (int v = -halfWidthOfKernel; v <= halfWidthOfKernel; v++) {
+                    double fromGauss = Kernel::canculateGaussInOnePoint(windowSize / 6, u, v),
+                           fromGradientX = gradientX.getBorderPixel(i + u, j + v, type),
+                           fromGradientY = gradientY.getBorderPixel(i + u, j + v, type);
+                    A += fromGauss * fromGradientX * fromGradientX;
+                    B += fromGauss * fromGradientX * fromGradientY;
+                    C += fromGauss * fromGradientY * fromGradientY;
+                }
+            }
+            const double determinant = A * C - B * B,
+                         trace = A + C;
+            double contrast = determinant - k * trace * trace;
+            contrastImage.setPixel(i, j, contrast);
+        }
+    }
+    return findInteresingPointsFromContrastImage(contrastImage, contrastBorder, type, halfWidthOfKernel);
 }
 
 vector<InterestingPoint> InterestPointsFinder::findInteresingPointsFromContrastImage(

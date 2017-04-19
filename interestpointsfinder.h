@@ -9,7 +9,9 @@ struct InterestingPoint {
     int x, y;
     double contrast;
     double radiusToGreaterContrast;
+    double sigma;
     InterestingPoint() : x(-1), y(-1), contrast(-1), radiusToGreaterContrast(numeric_limits<double>::max()){}
+    InterestingPoint(int x, int y) : x(x), y(y), contrast(0), radiusToGreaterContrast(0){}
     InterestingPoint(int x, int y, double contrast) : x(x), y(y), contrast(contrast), radiusToGreaterContrast(numeric_limits<double>::max()){}
     double getDistance(const InterestingPoint point) const{
         return hypot(x - point.x, y - point.y);
@@ -38,6 +40,8 @@ public:
             vector<InterestingPoint>& points,
             unsigned int necessaryPoints
             );
+    static double computeHarrisInOnePoint(const MyImage& image,
+                                          int i, int j, double sigma);
 
 };
 

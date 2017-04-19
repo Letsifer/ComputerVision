@@ -61,4 +61,5 @@ DISTFILES += \
     images/lena-min-for5-0.jpg \
     images/lena-min-for5-5.jpg \
     images/lena-min-for60-0.jpg \
-    images/lena-min-for60-60.jpg
+    images/lena-min-for60-60.jpg \
+    images/rounds.jpg

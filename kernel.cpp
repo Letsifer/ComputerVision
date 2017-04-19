@@ -50,11 +50,16 @@ Kernel Kernel::createYSobelKernel() {
 Kernel Kernel::createYGaussKernel(const double sigma) {
     const double denominator = sqrt(2 * M_PI) * sigma, sigmaSqr = 2 * sigma * sigma;
     const int k = (int) round(3 * sigma), size = k * 2 + 1;
-    Kernel kernel = Kernel(size, 1);
+    Kernel kernel = Kernel(1, size);
+    double sum = 0;
     for (int i = 0; i < size; i++) {
         int x = i - k;
         double value = exp(- x * x / sigmaSqr) / denominator;
-        kernel.setElement(i, 0, value);
+        sum += value;
+        kernel.setElement(0, i, value);
+    }
+    for (int i = 0; i < size ; i++) {
+        kernel.setElement(0, i, kernel.getElement(0, i) / sum);
     }
     return kernel;
 }
@@ -62,11 +67,16 @@ Kernel Kernel::createYGaussKernel(const double sigma) {
 Kernel Kernel::createXGaussKernel(const double sigma) {
     const double denominator = sqrt(2 * M_PI) * sigma, sigmaSqr = 2 * sigma * sigma;
     const int k = (int) round(3 * sigma), size = k * 2 + 1;
-    Kernel kernel = Kernel(1, size);
+    Kernel kernel = Kernel(size, 1);
+    double sum = 0;
     for (int i = 0; i < size; i++) {
         int x = i - k;
         double value = exp(- x * x / sigmaSqr) / denominator;
-        kernel.setElement(0, i, value);
+        sum += value;
+        kernel.setElement(i, 0, value);
+    }
+    for (int i = 0; i < size ; i++) {
+        kernel.setElement(i, 0, kernel.getElement(i, 0) / sum);
     }
     return kernel;
 }

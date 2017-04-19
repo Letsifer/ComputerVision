@@ -20,7 +20,7 @@ MyImage MyImage::createMyImageFromQImage(const QImage qImage) {
             double red = qRed(rgb) * 0.299,
                    green = qGreen(rgb) * 0.587,
                     blue = qBlue(rgb) * 0.114;
-            result.setPixel(i, j, (red + green + blue) / 255);
+            result.setPixel(i, j, (red + green + blue) / 255.0);
         }
     }
     return result;
@@ -90,12 +90,12 @@ MyImage MyImage::convoluton(const Kernel& kernel, const BorderType borderType) c
 
 double MyImage::pixelConvolution(int y, int x, const Kernel& kernel, const BorderType borderType) const{
     double result = 0;
-    int rangeX = kernel.getKernelHalfWidth();
-    int rangeY = kernel.getKernelHalfHeight();
+    const int rangeX = kernel.getKernelHalfWidth();
+    const int rangeY = kernel.getKernelHalfHeight();
     for (int i = -rangeY; i <= rangeY; i++) {
-        int currentY = y + i;
+        const int currentY = y + i;
         for (int j = -rangeX; j <= rangeX; j++) {
-            int currentX = x + j;
+            const int currentX = x + j;
             bool areNotInRangeValue = areNotInRange(currentX, currentY);
             double pixelResult = areNotInRangeValue
                     ? getBorderPixel(currentY, currentX, borderType)
@@ -194,4 +194,14 @@ MyImage MyImage::divideImage() const{
         }
     }
     return image;
+}
+
+MyImage MyImage::subtract(const MyImage other) const {
+    MyImage result = MyImage(height, width);
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            result.setPixel(i, j, getPixel(i, j) - other.getPixel(i, j));
+        }
+    }
+    return result;
 }
