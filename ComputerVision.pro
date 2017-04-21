@@ -63,3 +63,13 @@ DISTFILES += \
     images/lena-min-for60-0.jpg \
     images/lena-min-for60-60.jpg \
     images/rounds.jpg
+
+unix|win32: LIBS += -L$$PWD/../gnu_sci_lib/gslLib/ -lgsl
+
+INCLUDEPATH += $$PWD/../gnu_sci_lib
+DEPENDPATH += $$PWD/../gnu_sci_lib
+
+unix|win32: LIBS += -L$$PWD/../gnu_sci_lib/gslLib/ -lgslcblas
+
+INCLUDEPATH += $$PWD/../gnu_sci_lib
+DEPENDPATH += $$PWD/../gnu_sci_lib

@@ -39,14 +39,14 @@ public:
     static vector<Descriptor> createOrientedDescriptors(
             const MyImage& sobelX, const MyImage& sobelY,
             int pointX, int pointY,
-            double sigma
+            double sigma, double basicSigma
             );
     Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                int pointX, int pointY,
                int regionsX, int regionsY,
                int binsInHistogram, double angleShift,
                bool normalize,
-               double sigma
+               double sigma, double basicSigma
                );
     Descriptor(const Descriptor& sample);
     Descriptor& operator=(const Descriptor& sample);

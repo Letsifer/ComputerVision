@@ -1,15 +1,16 @@
 #include "descriptorfinder.h"
+#include <assert.h>
 
 vector<Descriptor> Descriptor::createOrientedDescriptors(
         const MyImage &sobelX, const MyImage &sobelY,
         int pointX, int pointY,
-        double sigma) {
+        const double sigma, const double basicSigma) {
     const double BORDER_OF_CHOOSING_SECOND_PICK = 0.8;
     Descriptor notOriented = Descriptor(
                 sobelX, sobelY,
                 pointX, pointY,
                 1, 1,
-                manyBinsNumber, 0, false, sigma
+                manyBinsNumber, 0, false, sigma, basicSigma
                 );
     int indexOfMax = -1, indexOfSecondMax = -1;
     for (int i = 0; i < notOriented.sizeOfDescriptor; i++) {
@@ -29,7 +30,7 @@ vector<Descriptor> Descriptor::createOrientedDescriptors(
                                pointX, pointY,
                                regionsX, regionsY,
                                binsInHistogram, firstAngle,
-                               true, sigma));
+                               true, sigma, basicSigma));
     const double maxValue = notOriented.getElement(indexOfMax),
                  secondMaxValue = notOriented.getElement(indexOfSecondMax);
     if (maxValue * BORDER_OF_CHOOSING_SECOND_PICK <= secondMaxValue) {
@@ -38,7 +39,7 @@ vector<Descriptor> Descriptor::createOrientedDescriptors(
                                    pointX, pointY,
                                    regionsX, regionsY,
                                    binsInHistogram, secondAngle,
-                                   true, sigma));
+                                   true, sigma, basicSigma));
     }
     return descs;
 }
@@ -56,7 +57,7 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                        int pointX, int pointY,
                        int regionsX, int regionsY,
                        int binsInHistogram, double angleShift,
-                       bool makeNormalize, double sigma
+                       bool makeNormalize, double sigma, double basicSigma
                        ) : pointX(pointX), pointY(pointY){
     const double NORMALIZE_THRESHOLD = 0.2;
     sizeOfDescriptor = regionsX * regionsY * binsInHistogram;
@@ -71,36 +72,52 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
         centersOfBins[i] = (2 * i + 1) * basicValue;
     }
 
-    const int sizeOfRegionX = sizeOfGrid / regionsX,
-              sizeOfRegionY = sizeOfGrid / regionsY;
+    const double sizeCoef = sigma / basicSigma;
+    const int scaledSizeOfGrid = sizeCoef * sizeOfGrid;
+
+    const double sizeOfRegionX = (double)scaledSizeOfGrid / regionsX,
+                 sizeOfRegionY = (double)scaledSizeOfGrid / regionsY;
 
     const double cosOfAngle = cos(angleShift),
                  sinOfAngle = sin(angleShift);
-    const int leftX = - sizeOfGrid / 2 + 1, rightX = sizeOfGrid / 2;
-    const int topY = - sizeOfGrid / 2 + 1, botY = sizeOfGrid / 2;
-    for (int i = 0; i < sizeOfGrid; i++) {
-        for (int j = 0; j < sizeOfGrid; j++) {
-            const int nonRotatedX = j - sizeOfGrid / 2 + 1,
-                      nonRotatedY = i - sizeOfGrid / 2 + 1;
-            int rotatedX = nonRotatedX * cosOfAngle + nonRotatedY * sinOfAngle,
-                rotatedY = - nonRotatedX * sinOfAngle + nonRotatedY * cosOfAngle;
-            if (rotatedX < leftX || rotatedX > rightX || rotatedY < topY || rotatedY > botY) {
+    const int halfSize = scaledSizeOfGrid / 2;
+    for (int i = 0; i < scaledSizeOfGrid; i++) {
+        for (int j = 0; j < scaledSizeOfGrid; j++) {
+            const int nonRotatedX = j - halfSize + 1,
+                      nonRotatedY = i - halfSize + 1;
+            const int rotatedX = nonRotatedX * cosOfAngle + nonRotatedY * sinOfAngle + halfSize - 1,
+                      rotatedY = - nonRotatedX * sinOfAngle + nonRotatedY * cosOfAngle + halfSize - 1;
+            if (rotatedX < 0 || rotatedX > scaledSizeOfGrid - 1 ||
+                rotatedY < 0 || rotatedY > scaledSizeOfGrid - 1) {
                 continue;
             }
-            const int x = pointX + j - sizeOfGrid / 2 + 1;
-            const int y = pointY + i - sizeOfGrid / 2 + 1;
-            rotatedX += sizeOfGrid / 2 - 1;
-            rotatedY += sizeOfGrid / 2 - 1;
-            const int regionsIndex = rotatedY / sizeOfRegionY * regionsX + rotatedX / sizeOfRegionX;
+            const int x = pointX + j - halfSize + 1;
+            const int y = pointY + i - halfSize + 1;
             const double dx = sobelX.getBorderPixel(y, x, BorderType::MirrorBorder),
-                   dy = sobelY.getBorderPixel(y, x, BorderType::MirrorBorder);
+                         dy = sobelY.getBorderPixel(y, x, BorderType::MirrorBorder);
+            const double pixel = sqrt(dx*dx+dy*dy) * findDistanceCoefficient(x, y, sigma);
+
+            const int regionsIndexX = rotatedX / sizeOfRegionX / sizeCoef,
+                      regionsIndexY = rotatedY / sizeOfRegionY / sizeCoef;
+            assert(regionsIndexX < regionsX && regionsIndexX >= 0);
+            assert(regionsIndexY < regionsY && regionsIndexY >= 0);
+            const int regionsIndex = regionsIndexY * regionsX + regionsIndexX;
+            if (regionsIndex < 0 || regionsIndex >= regionsX*regionsY) {
+                assert(regionsIndex >= 0 && regionsIndex < regionsX*regionsY);
+            }
+
+
             const double angle = getAngle(dx, dy, angleShift);
             auto pair = getNeighborsToPoint(angle, binsInHistogram, centersOfBins);
             const int first = pair.first, second = pair.second;
-            const double pixel = sqrt(dx*dx+dy*dy) * findDistanceCoefficient(x, y, sigma);
+
+            assert(regionsIndex * binsInHistogram + first >= 0);
+            assert(regionsIndex * binsInHistogram + first < sizeOfDescriptor);
             elements[regionsIndex * binsInHistogram + first] += pixel
                     * findAngleCoefficient(angle, centersOfBins[first], centersOfBins[second]);
 
+            assert(regionsIndex * binsInHistogram + second >= 0);
+            assert(regionsIndex * binsInHistogram + second < sizeOfDescriptor);
             elements[regionsIndex * binsInHistogram + second] += pixel
                     * findAngleCoefficient(angle, centersOfBins[second], centersOfBins[first]);
         }

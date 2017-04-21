@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QPainter>
 #include "descriptorfinder.h"
+#include <gsl/gsl_blas.h>
 using namespace std;
 
 namespace Ui {

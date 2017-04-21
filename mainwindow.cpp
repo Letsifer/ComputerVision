@@ -217,7 +217,7 @@ vector<Descriptor> MainWindow::findPoints(const MyImage& image) {
             auto added = Descriptor::createOrientedDescriptors(
                         sobelX, sobelY,
                         center.x * sizeFactor, center.y * sizeFactor,
-                        sigma);
+                        sigma, pyramid.getElement(0, 0).currentSigma);
             descriptors.insert(descriptors.end(), added.begin(), added.end());
         }
     }
