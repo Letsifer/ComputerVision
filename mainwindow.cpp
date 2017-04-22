@@ -1,12 +1,4 @@
 #include "mainwindow.h"
-#include "pyramid.h"
-#include <QDir>
-#include <QPainter>
-#include <QTextStream>
-#include "ui_mainwindow.h"
-#include <iostream>
-#include <memory>
-using namespace std;
 
 void MainWindow::lab1() {
     //need 4 labels
@@ -121,12 +113,12 @@ void MainWindow::lab4() {
     const QString imageName1("lena");
     const QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
     const MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
-    const auto firstVector = findPoints(image1);
+    const auto firstVector = Descriptor::buildDescriptors(image1);
 
-    const QString imageName2("lena-min-for30-30");
+    const QString imageName2("lena-min-for45-45");
     const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
     const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
-    auto secondVector = findPoints(image2);
+    auto secondVector = Descriptor::buildDescriptors(image2);
 
     QImage result = QImage(image1.getWidth() + image2.getWidth(),
                            max(image1.getHeight(), image2.getHeight()),
@@ -147,81 +139,24 @@ void MainWindow::lab4() {
     QPen pen = QPen();
     pen.setWidth(2);
     painter.setPen(pen);
-    int color = 0;
-    const double T = 0.8;
-    QColor red = QColor(255, 0, 0),
-           green = QColor(0, 255, 0),
-           blue = QColor(0, 0, 255),
-           black = QColor(0, 0, 0);
-    for (unsigned int i = 0; i < firstVector.size(); i++) {
-        double minDistance = numeric_limits<double>::max(), secondMinDistance = minDistance;
-        int indexMin = -1;
-        for (unsigned int j = 0; j < secondVector.size(); j++) {
-            double distance = firstVector[i].getDistance(secondVector[j]);
-            if (minDistance > distance) {
-                secondMinDistance = minDistance;
-                minDistance = distance;
-                indexMin = j;
-                continue;
-            }
-            if (secondMinDistance > distance) {
-                secondMinDistance = distance;
-            }
-        }
-        const double rate = minDistance / secondMinDistance;
-        if (rate <= T) {
-            switch (color) {
-            case 0:
-                pen.setColor(red);
-                color++;
-                break;
-            case 1:
-                pen.setColor(blue);
-                color++;
-                break;
-            case 2:
-                pen.setColor(green);
-                color++;
-                break;
-            case 3:
-                pen.setColor(black);
-                color = 0;
-                break;
-            }
-            painter.setPen(pen);
-            const int x1 = firstVector[i].getPointX(),
-                      y1 = firstVector[i].getPointY(),
-                      x2 = secondVector[indexMin].getPointX() + qImage1.width(),
-                      y2 = secondVector[indexMin].getPointY();
-            painter.drawLine(x1, y1, x2, y2);
-        }
+    int colorIndex = 0;
+    const vector<QColor> colors;
+    colors.push_back(QColor(255, 0, 0)); //red
+    colors.push_back(QColor(0, 255, 0)); //green
+    colors.push_back(QColor(0, 0, 255)); //blue
+    colors.push_back(QColor(0, 0, 0)); //black
+    const int colorNumber = colors.size();
+    auto matches = DescriptorMatcher::findMatchersBetweenDescriptors(firstVector, secondVector);
+    for (const PointMatch& match : matches) {
+        colorIndex = (colorIndex + 1) % colorNumber;
+        pen.setColor(colors.at(colorIndex));
+        painter.setPen(pen);
+        const int x1 = match.firstX, y1 = match.firstY,
+                  x2 = match.secondX + qImage1.width(),
+                  y2 = match.secondY;
+        painter.drawLine(x1, y1, x2, y2);
     }
     result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
-}
-vector<Descriptor> MainWindow::findPoints(const MyImage& image) {
-    const double harrisThreshold = 0.0008;
-    const int scalesInOctave = 3, octaves = 5;
-    const Pyramid pyramid = Pyramid(image, octaves, scalesInOctave);
-    const auto centers = pyramid.createDogPyramid().findExtremums();
-    const MyImage sobelX = image.convoluton(Kernel::createXSobelKernel(), BorderType::MirrorBorder),
-                  sobelY = image.convoluton(Kernel::createYSobelKernel(), BorderType::MirrorBorder);
-    vector<Descriptor> descriptors;
-    for (const BlobsCenter& center : centers) {
-        const double harrisValue = InterestPointsFinder::computeHarrisInOnePoint(
-                    pyramid.getElement(center.octave, center.scale).image,
-                    center.y, center.x, center.sigma * M_SQRT2
-                    );
-        if (harrisValue > harrisThreshold) {
-            const double sizeFactor = pow(2.0, center.octave);
-            const double sigma = center.sigma * M_SQRT2 * sizeFactor;
-            auto added = Descriptor::createOrientedDescriptors(
-                        sobelX, sobelY,
-                        center.x * sizeFactor, center.y * sizeFactor,
-                        sigma, pyramid.getElement(0, 0).currentSigma);
-            descriptors.insert(descriptors.end(), added.begin(), added.end());
-        }
-    }
-    return descriptors;
 }
 
 void MainWindow::findBlobs() {
@@ -265,7 +200,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-//    findBlobs();
     lab4();
 }
 

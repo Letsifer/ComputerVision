@@ -1,15 +1,20 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "ui_mainwindow.h"
+#include "pyramid.h"
+#include "descriptormatcher.h"
+#include "interestpointsfinder.h"
+#include "MyImage.h"
+#include "descriptorfinder.h"
+
+#include <QTextStream>
 #include <QMainWindow>
 #include <iostream>
 #include <memory>
-#include "MyImage.h"
 #include <vector>
-#include "interestpointsfinder.h"
 #include <QDir>
 #include <QPainter>
-#include "descriptorfinder.h"
 #include <gsl/gsl_blas.h>
 using namespace std;
 
@@ -27,7 +32,6 @@ class MainWindow : public QMainWindow
     void printForThirdLab(QImage image, const vector<InterestingPoint> points, const QString filename);
 
     void lab4();
-    vector<Descriptor> findPoints(const MyImage& image);
 
     void findBlobs();
 public:

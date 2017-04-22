@@ -1,5 +1,71 @@
 #include "descriptorfinder.h"
-#include <assert.h>
+
+
+vector<Descriptor> Descriptor::buildDescriptors(
+            const MyImage& image
+            ) {
+    const double harrisThreshold = 0.0008;
+    const int scalesInOctave = 3, octaves = 5;
+    const double BORDER_OF_CHOOSING_SECOND_PICK = 0.8;
+    const Pyramid pyramid = Pyramid(image, octaves, scalesInOctave);
+    const double basicSigma = pyramid.getElement(0, 0).currentSigma;
+    const auto centers = pyramid.createDogPyramid().findExtremums();
+    const MyImage sobelX = image.convoluton(Kernel::createXSobelKernel(), BorderType::MirrorBorder),
+                  sobelY = image.convoluton(Kernel::createYSobelKernel(), BorderType::MirrorBorder);
+    vector<Descriptor> result;
+    for (const BlobsCenter& center : centers) {
+        const double harrisValue = InterestPointsFinder::computeHarrisInOnePoint(
+                    pyramid.getElement(center.octave, center.scale).image,
+                    center.y, center.x, center.sigma * M_SQRT2
+                    );
+        if (harrisValue > harrisThreshold) {
+            const double sizeFactor = pow(2.0, center.octave);
+            const double sigma = center.sigma * M_SQRT2 * sizeFactor;
+            const int pointX = center.x * sizeFactor, pointY = center.y * sizeFactor;
+            Descriptor notOriented = Descriptor(
+                        sobelX, sobelY,
+                        pointX, pointY,
+                        1, 1,
+                        manyBinsNumber, 0,
+                        false,
+                        sigma, basicSigma
+                        );
+            int indexOfMax = -1, indexOfSecondMax = -1;
+            for (int i = 0; i < notOriented.sizeOfDescriptor; i++) {
+                if (indexOfMax == -1 || notOriented.getElement(i) > notOriented.getElement(indexOfMax)) {
+                    indexOfSecondMax = indexOfMax;
+                    indexOfMax = i;
+                    continue;
+                }
+                if (indexOfSecondMax == -1 || notOriented.getElement(i) > notOriented.getElement(indexOfSecondMax)) {
+                    indexOfSecondMax = i;
+                }
+            }
+            const double firstAngle = notOriented.calculateAngle(indexOfMax, manyBinsNumber);
+            result.push_back(Descriptor(
+                                sobelX, sobelY,
+                                pointX, pointY,
+                                regionsX, regionsY,
+                                binsInHistogram, firstAngle,
+                                true,
+                                sigma, basicSigma
+                                ));
+            const double maxValue = notOriented.getElement(indexOfMax),
+                         secondMaxValue = notOriented.getElement(indexOfSecondMax);
+            if (maxValue * BORDER_OF_CHOOSING_SECOND_PICK <= secondMaxValue) {
+                const double secondAngle = notOriented.calculateAngle(indexOfSecondMax, manyBinsNumber);
+                result.push_back(Descriptor(sobelX, sobelY,
+                                    pointX, pointY,
+                                    regionsX, regionsY,
+                                    binsInHistogram, secondAngle,
+                                    true,
+                                    sigma, basicSigma
+                                    ));
+            }
+        }
+    }
+    return result;
+}
 
 vector<Descriptor> Descriptor::createOrientedDescriptors(
         const MyImage &sobelX, const MyImage &sobelY,
@@ -105,7 +171,6 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
             if (regionsIndex < 0 || regionsIndex >= regionsX*regionsY) {
                 assert(regionsIndex >= 0 && regionsIndex < regionsX*regionsY);
             }
-
 
             const double angle = getAngle(dx, dy, angleShift);
             auto pair = getNeighborsToPoint(angle, binsInHistogram, centersOfBins);

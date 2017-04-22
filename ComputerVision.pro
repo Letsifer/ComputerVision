@@ -18,14 +18,16 @@ SOURCES += main.cpp\
     kernel.cpp \
     pyramid.cpp \
     interestpointsfinder.cpp \
-    descriptorfinder.cpp
+    descriptorfinder.cpp \
+    descriptormatcher.cpp
 
 HEADERS  += mainwindow.h \
     MyImage.h \
     kernel.h \
     pyramid.h \
     interestpointsfinder.h \
-    descriptorfinder.h
+    descriptorfinder.h \
+    descriptormatcher.h
 
 FORMS    += mainwindow.ui
 

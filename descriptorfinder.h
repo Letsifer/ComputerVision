@@ -1,10 +1,14 @@
 #ifndef DESCRIPTORFINDER_H
 #define DESCRIPTORFINDER_H
-#include<cmath>
-#include"MyImage.h"
+#include <cmath>
+#include <assert.h>
 #include <iostream>
 #include <QDir>
 #include <QTextStream>
+
+#include "MyImage.h"
+#include "pyramid.h"
+#include "interestpointsfinder.h"
 using namespace std;
 
 class Descriptor
@@ -36,6 +40,9 @@ class Descriptor
     pair<int, int> getNeighborsToPoint(double angle, int binsNumber, const unique_ptr<double[]>& centers) const;
     double calculateAngle(int index, int manyBinsNumber) const;
 public:
+    static vector<Descriptor> buildDescriptors(
+            const MyImage& image
+            );
     static vector<Descriptor> createOrientedDescriptors(
             const MyImage& sobelX, const MyImage& sobelY,
             int pointX, int pointY,
