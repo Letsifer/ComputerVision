@@ -1,5 +1,6 @@
+#define _USE_MATH_DEFINES
 #include <memory>
-#include <cmath>
+#include <math.h>
 using namespace std;
 #ifndef KERNEL_H
 #define KERNEL_H

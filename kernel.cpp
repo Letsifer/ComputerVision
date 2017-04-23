@@ -1,7 +1,7 @@
 #include "kernel.h"
 #include <iostream>
 #include <memory>
-#include <cmath>
+#include <math.h>
 using namespace std;
 
 constexpr static double VERTICAL_KERNEL[9] = {

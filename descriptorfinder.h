@@ -19,6 +19,12 @@ class Descriptor
     constexpr static int sizeOfGrid = 16;
     constexpr static int binsInHistogram = 8, manyBinsNumber = 36;
 
+    constexpr static double harrisThreshold = 0.0008;
+    constexpr static int scalesInOctave = 3, octaves = 5;
+    constexpr static double BORDER_OF_CHOOSING_SECOND_PICK = 0.8;
+
+    constexpr static double NORMALIZE_THRESHOLD = 0.2;
+
     int sizeOfDescriptor;
     unique_ptr<double[]> elements;
 

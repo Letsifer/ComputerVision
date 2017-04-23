@@ -4,9 +4,6 @@
 vector<Descriptor> Descriptor::buildDescriptors(
             const MyImage& image
             ) {
-    const double harrisThreshold = 0.0008;
-    const int scalesInOctave = 3, octaves = 5;
-    const double BORDER_OF_CHOOSING_SECOND_PICK = 0.8;
     const Pyramid pyramid = Pyramid(image, octaves, scalesInOctave);
     const double basicSigma = pyramid.getElement(0, 0).currentSigma;
     const auto centers = pyramid.createDogPyramid().findExtremums();
@@ -82,7 +79,6 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                        int binsInHistogram, double angleShift,
                        bool makeNormalize, double sigma, double basicSigma
                        ) : pointX(pointX), pointY(pointY){
-    const double NORMALIZE_THRESHOLD = 0.2;
     sizeOfDescriptor = regionsX * regionsY * binsInHistogram;
     elements = make_unique<double[]>((size_t)(sizeOfDescriptor));
     for (int i = 0; i < sizeOfDescriptor; i++) {

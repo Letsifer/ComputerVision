@@ -66,14 +66,16 @@ DISTFILES += \
     images/lena-min-for5-5.jpg \
     images/lena-min-for60-0.jpg \
     images/lena-min-for60-60.jpg \
-    images/rounds.jpg
+    images/rounds.jpg \
+    images/view1.jpg \
+    images/view2.jpg
 
-unix|win32: LIBS += -L$$PWD/gnu_sci_lib/gslLib/ -lgsl
+unix|win32: LIBS += -L$$PWD/gslLib/ -lgsl
 
-INCLUDEPATH += $$PWD/gnu_sci_lib
-DEPENDPATH += $$PWD/gnu_sci_lib
+INCLUDEPATH += $$PWD/gsl
+DEPENDPATH += $$PWD/gsl
 
-unix|win32: LIBS += -L$$PWD/gnu_sci_lib/gslLib/ -lgslcblas
+unix|win32: LIBS += -L$$PWD/gslLib/ -lgslcblas
 
-INCLUDEPATH += $$PWD/gnu_sci_lib
-DEPENDPATH += $$PWD/gnu_sci_lib
+INCLUDEPATH += $$PWD/gsl
+DEPENDPATH += $$PWD/gsl

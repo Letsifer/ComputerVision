@@ -119,43 +119,8 @@ void MainWindow::lab4() {
     const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
     const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
     auto secondVector = Descriptor::buildDescriptors(image2);
-
-    QImage result = QImage(image1.getWidth() + image2.getWidth(),
-                           max(image1.getHeight(), image2.getHeight()),
-                           QImage::Format_RGB32
-                           );
-    for (int i = 0; i < qImage1.height(); i++) {
-        for (int j = 0; j < qImage1.width(); j++) {
-            result.setPixel(j, i, qImage1.pixel(j, i));
-        }
-    }
-    for (int i = 0, shift = qImage1.width(); i < qImage2.height(); i++) {
-        for (int j = 0; j < qImage2.width(); j++) {
-            result.setPixel(j + shift, i, qImage2.pixel(j, i));
-        }
-    }
-
-    QPainter painter(&result);
-    QPen pen = QPen();
-    pen.setWidth(2);
-    painter.setPen(pen);
-    int colorIndex = 0;
-    vector<QColor> colors;
-    colors.push_back(QColor(255, 0, 0)); //red
-    colors.push_back(QColor(0, 255, 0)); //green
-    colors.push_back(QColor(0, 0, 255)); //blue
-    colors.push_back(QColor(0, 0, 0)); //black
-    const int colorNumber = colors.size();
     auto matches = DescriptorMatcher::findMatchersBetweenDescriptors(firstVector, secondVector);
-    for (const PointMatch& match : matches) {
-        colorIndex = (colorIndex + 1) % colorNumber;
-        pen.setColor(colors.at(colorIndex));
-        painter.setPen(pen);
-        const int x1 = match.firstX, y1 = match.firstY,
-                  x2 = match.secondX + qImage1.width(),
-                  y2 = match.secondY;
-        painter.drawLine(x1, y1, x2, y2);
-    }
+    auto result = drawMatches(qImage1, qImage2, matches);
     result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
 }
 
@@ -195,23 +160,72 @@ void MainWindow::findBlobs() {
     qImage.save(outputDir.absoluteFilePath(imageName1 + ".jpg"), "jpg");
 }
 
+QImage MainWindow::drawMatches(const QImage &image1, const QImage &image2, const vector<PointMatch> &matches) {
+    QImage result = QImage(image1.width() + image2.width(),
+                           max(image1.height(), image2.height()),
+                           QImage::Format_RGB32
+                           );
+    for (int i = 0; i < image1.height(); i++) {
+        for (int j = 0; j < image1.width(); j++) {
+            result.setPixel(j, i, image1.pixel(j, i));
+        }
+    }
+    for (int i = 0, shift = image1.width(); i < image2.height(); i++) {
+        for (int j = 0; j < image2.width(); j++) {
+            result.setPixel(j + shift, i, image2.pixel(j, i));
+        }
+    }
+
+    QPainter painter(&result);
+    QPen pen = QPen();
+    pen.setWidth(2);
+    painter.setPen(pen);
+    int colorIndex = 0;
+    vector<QColor> colors;
+    colors.push_back(QColor(255, 0, 0)); //red
+    colors.push_back(QColor(0, 255, 0)); //green
+    colors.push_back(QColor(0, 0, 255)); //blue
+    colors.push_back(QColor(0, 0, 0)); //black
+    const int colorNumber = colors.size();
+    for (const PointMatch& match : matches) {
+        colorIndex = (colorIndex + 1) % colorNumber;
+        pen.setColor(colors.at(colorIndex));
+        painter.setPen(pen);
+        const int x1 = match.firstX, y1 = match.firstY,
+                  x2 = match.secondX + image1.width(),
+                  y2 = match.secondY;
+        painter.drawLine(x1, y1, x2, y2);
+    }
+    return result;
+}
+
 void MainWindow::ransac() {
     QDir inputImagesDir ("../ComputerVision/images");
     QDir().mkdir("../images/lab8");
     QDir outputDir ("../images/lab8");
     ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
 
-    const QString imageName1("lena");
-    const QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
+    const QString imageName1("image1");
+    QString filepath = inputImagesDir.absoluteFilePath(imageName1 + ".jpg");
+    QPixmap pix = QPixmap(filepath);
+    const QImage qImage1 = pix.toImage();
     const MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
     const auto firstVector = Descriptor::buildDescriptors(image1);
 
-    const QString imageName2("lena-min-for45-45");
+    const QString imageName2("image2");
     const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
     const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
     auto secondVector = Descriptor::buildDescriptors(image2);
 
     auto matches = DescriptorMatcher::findMatchersBetweenDescriptors(firstVector, secondVector);
+
+    auto resultOfMatches = drawMatches(qImage1, qImage2, matches);
+    QString matchString = QString("matches-");
+    resultOfMatches.save(outputDir.absoluteFilePath(matchString + imageName1 + imageName2 + ".jpg"), "jpg");
+
+//    for (PointMatch match : matches) {
+//        match.swapPoints();
+//    }
 
     auto homography = RansacAlgorithm::findHomography(matches);
 
@@ -234,7 +248,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    lab4();
+    ransac();
 }
 
 MainWindow::~MainWindow()

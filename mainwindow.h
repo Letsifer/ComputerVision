@@ -35,6 +35,7 @@ class MainWindow : public QMainWindow
 
     void findBlobs();
 
+    QImage drawMatches(const QImage& image1, const QImage& image2, const vector<PointMatch>& matches);
     void ransac();
 public:
     explicit MainWindow(QWidget *parent = 0);

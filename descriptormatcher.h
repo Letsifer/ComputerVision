@@ -1,4 +1,5 @@
 #include <vector>
+#include <algorithm>
 #include "descriptorfinder.h"
 #ifndef DESCRIPTORMATCHER_H
 #define DESCRIPTORMATCHER_H
@@ -8,6 +9,10 @@ struct PointMatch {
     int secondX, secondY;
     PointMatch(int firstX, int firstY, int secondX, int secondY) :
         firstX(firstX), firstY(firstY), secondX(secondX), secondY(secondY){}
+    void swapPoints() {
+        std::swap(firstX, secondX);
+        std::swap(firstY, secondY);
+    }
 };
 
 
