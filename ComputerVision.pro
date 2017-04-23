@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     pyramid.cpp \
     interestpointsfinder.cpp \
     descriptorfinder.cpp \
-    descriptormatcher.cpp
+    descriptormatcher.cpp \
+    ransacalgorithm.cpp
 
 HEADERS  += mainwindow.h \
     MyImage.h \
@@ -27,7 +28,8 @@ HEADERS  += mainwindow.h \
     pyramid.h \
     interestpointsfinder.h \
     descriptorfinder.h \
-    descriptormatcher.h
+    descriptormatcher.h \
+    ransacalgorithm.h
 
 FORMS    += mainwindow.ui
 
@@ -66,12 +68,12 @@ DISTFILES += \
     images/lena-min-for60-60.jpg \
     images/rounds.jpg
 
-unix|win32: LIBS += -L$$PWD/../gnu_sci_lib/gslLib/ -lgsl
+unix|win32: LIBS += -L$$PWD/gnu_sci_lib/gslLib/ -lgsl
 
-INCLUDEPATH += $$PWD/../gnu_sci_lib
-DEPENDPATH += $$PWD/../gnu_sci_lib
+INCLUDEPATH += $$PWD/gnu_sci_lib
+DEPENDPATH += $$PWD/gnu_sci_lib
 
-unix|win32: LIBS += -L$$PWD/../gnu_sci_lib/gslLib/ -lgslcblas
+unix|win32: LIBS += -L$$PWD/gnu_sci_lib/gslLib/ -lgslcblas
 
-INCLUDEPATH += $$PWD/../gnu_sci_lib
-DEPENDPATH += $$PWD/../gnu_sci_lib
+INCLUDEPATH += $$PWD/gnu_sci_lib
+DEPENDPATH += $$PWD/gnu_sci_lib

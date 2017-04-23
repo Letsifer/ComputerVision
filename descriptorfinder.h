@@ -43,11 +43,6 @@ public:
     static vector<Descriptor> buildDescriptors(
             const MyImage& image
             );
-    static vector<Descriptor> createOrientedDescriptors(
-            const MyImage& sobelX, const MyImage& sobelY,
-            int pointX, int pointY,
-            double sigma, double basicSigma
-            );
     Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                int pointX, int pointY,
                int regionsX, int regionsY,

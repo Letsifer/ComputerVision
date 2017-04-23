@@ -140,7 +140,7 @@ void MainWindow::lab4() {
     pen.setWidth(2);
     painter.setPen(pen);
     int colorIndex = 0;
-    const vector<QColor> colors;
+    vector<QColor> colors;
     colors.push_back(QColor(255, 0, 0)); //red
     colors.push_back(QColor(0, 255, 0)); //green
     colors.push_back(QColor(0, 0, 255)); //blue
@@ -193,6 +193,40 @@ void MainWindow::findBlobs() {
         }
     }
     qImage.save(outputDir.absoluteFilePath(imageName1 + ".jpg"), "jpg");
+}
+
+void MainWindow::ransac() {
+    QDir inputImagesDir ("../ComputerVision/images");
+    QDir().mkdir("../images/lab8");
+    QDir outputDir ("../images/lab8");
+    ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
+
+    const QString imageName1("lena");
+    const QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
+    const MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
+    const auto firstVector = Descriptor::buildDescriptors(image1);
+
+    const QString imageName2("lena-min-for45-45");
+    const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
+    const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
+    auto secondVector = Descriptor::buildDescriptors(image2);
+
+    auto matches = DescriptorMatcher::findMatchersBetweenDescriptors(firstVector, secondVector);
+
+    auto homography = RansacAlgorithm::findHomography(matches);
+
+    QImage result(qImage1.width() + qImage2.width(), qImage1.height() + qImage2.height(), QImage::Format_RGB32);
+    QPainter painter(&result);
+    painter.drawImage(0, 0, qImage1);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    QTransform transform(homography.at(0), homography.at(3), homography.at(6),
+                         homography.at(1), homography.at(4), homography.at(7),
+                         homography.at(2), homography.at(5), homography.at(8)
+                         );
+    painter.setTransform(transform);
+    painter.drawImage(0, 0, qImage2);
+    result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
 }
 
 MainWindow::MainWindow(QWidget *parent) :

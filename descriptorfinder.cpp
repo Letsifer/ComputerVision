@@ -67,49 +67,6 @@ vector<Descriptor> Descriptor::buildDescriptors(
     return result;
 }
 
-vector<Descriptor> Descriptor::createOrientedDescriptors(
-        const MyImage &sobelX, const MyImage &sobelY,
-        int pointX, int pointY,
-        const double sigma, const double basicSigma) {
-    const double BORDER_OF_CHOOSING_SECOND_PICK = 0.8;
-    Descriptor notOriented = Descriptor(
-                sobelX, sobelY,
-                pointX, pointY,
-                1, 1,
-                manyBinsNumber, 0, false, sigma, basicSigma
-                );
-    int indexOfMax = -1, indexOfSecondMax = -1;
-    for (int i = 0; i < notOriented.sizeOfDescriptor; i++) {
-        if (indexOfMax == -1 || notOriented.getElement(i) > notOriented.getElement(indexOfMax)) {
-            indexOfSecondMax = indexOfMax;
-            indexOfMax = i;
-            continue;
-        }
-        if (indexOfSecondMax == -1 || notOriented.getElement(i) > notOriented.getElement(indexOfSecondMax)) {
-            indexOfSecondMax = i;
-        }
-    }
-
-    const double firstAngle = notOriented.calculateAngle(indexOfMax, manyBinsNumber);
-    vector<Descriptor> descs;
-    descs.push_back(Descriptor(sobelX, sobelY,
-                               pointX, pointY,
-                               regionsX, regionsY,
-                               binsInHistogram, firstAngle,
-                               true, sigma, basicSigma));
-    const double maxValue = notOriented.getElement(indexOfMax),
-                 secondMaxValue = notOriented.getElement(indexOfSecondMax);
-    if (maxValue * BORDER_OF_CHOOSING_SECOND_PICK <= secondMaxValue) {
-        const double secondAngle = notOriented.calculateAngle(indexOfSecondMax, manyBinsNumber);
-        descs.push_back(Descriptor(sobelX, sobelY,
-                                   pointX, pointY,
-                                   regionsX, regionsY,
-                                   binsInHistogram, secondAngle,
-                                   true, sigma, basicSigma));
-    }
-    return descs;
-}
-
 double Descriptor::calculateAngle(const int index, const int binsNumber) const {
     const double left = elements[(index - 1 + binsNumber) % binsNumber];
     const double center = elements[index];

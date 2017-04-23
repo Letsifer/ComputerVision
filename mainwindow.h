@@ -7,6 +7,7 @@
 #include "interestpointsfinder.h"
 #include "MyImage.h"
 #include "descriptorfinder.h"
+#include "ransacalgorithm.h"
 
 #include <QTextStream>
 #include <QMainWindow>
@@ -15,7 +16,6 @@
 #include <vector>
 #include <QDir>
 #include <QPainter>
-#include <gsl/gsl_blas.h>
 using namespace std;
 
 namespace Ui {
@@ -34,6 +34,8 @@ class MainWindow : public QMainWindow
     void lab4();
 
     void findBlobs();
+
+    void ransac();
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
