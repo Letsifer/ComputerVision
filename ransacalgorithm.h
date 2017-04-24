@@ -17,9 +17,9 @@ class RansacAlgorithm
     constexpr static double EPS = 3; //погрешность в расстоянии между получившимися точками с матрицей гомографии и исходными точками
     constexpr static int MAX_ITERATIONS = 2000; //максимальное количество итераций алгоритма
 
-    constexpr static int GSL_MATRIX_ROWS = 2 * K, GSL_MATRIX_COLUMNS = 9;
+    constexpr static int GSL_MATRIX_COLUMNS = 9;
 
-    static vector<double> findCurrentHomography(const vector<PointMatch>& matches, vector<int>& choices);
+    static vector<double> findCurrentHomography(const vector<PointMatch>& matches, vector<int>& choices, int points);
     static double countPartOfCoordinate(const vector<double>& homography, int startIndex, const PointMatch& match);
 public:
     RansacAlgorithm();
