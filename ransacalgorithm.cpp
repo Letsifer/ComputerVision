@@ -35,7 +35,6 @@ vector<double> RansacAlgorithm::findHomography(const vector<PointMatch> &matches
 vector<double> RansacAlgorithm::findCurrentHomography(const vector<PointMatch> &matches, vector<int>& choices,
                                                       const int points) {
     random_shuffle(choices.begin(), choices.end());
-    //TOOD try to remake on smart pointers or to view
     gsl_matrix* matrix = gsl_matrix_calloc(2 * points, GSL_MATRIX_COLUMNS);
     for (int i = 0; i < points; i++) {
         const PointMatch& match = matches.at(choices.at(i));
