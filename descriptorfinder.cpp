@@ -7,18 +7,20 @@ vector<Descriptor> Descriptor::buildDescriptors(
     const Pyramid pyramid = Pyramid(image, octaves, scalesInOctave);
     const double basicSigma = pyramid.getElement(0, 0).currentSigma;
     const auto centers = pyramid.createDogPyramid().findExtremums();
-    const MyImage sobelX = image.convoluton(Kernel::createXSobelKernel(), BorderType::MirrorBorder),
-                  sobelY = image.convoluton(Kernel::createYSobelKernel(), BorderType::MirrorBorder);
+    const Kernel kernelSobelX = Kernel::createXSobelKernel(),
+                 kernelSObelY = Kernel::createYSobelKernel();
     vector<Descriptor> result;
     for (const BlobsCenter& center : centers) {
+        const MyImage currentImage = pyramid.getElement(center.octave, center.scale).image;
         const double harrisValue = InterestPointsFinder::computeHarrisInOnePoint(
-                    pyramid.getElement(center.octave, center.scale).image,
+                    currentImage,
                     center.y, center.x, center.sigma * M_SQRT2
                     );
         if (harrisValue > harrisThreshold) {
-            const double sizeFactor = pow(2.0, center.octave);
-            const double sigma = center.sigma * M_SQRT2 * sizeFactor;
-            const int pointX = center.x * sizeFactor, pointY = center.y * sizeFactor;
+            const MyImage sobelX = currentImage.convoluton(kernelSobelX, BorderType::MirrorBorder),
+                          sobelY = currentImage.convoluton(kernelSObelY, BorderType::MirrorBorder);
+            const double sigma = center.sigma * M_SQRT2;
+            const int pointX = center.x, pointY = center.y;
             Descriptor notOriented = Descriptor(
                         sobelX, sobelY,
                         pointX, pointY,

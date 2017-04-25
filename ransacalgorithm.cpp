@@ -11,7 +11,12 @@ vector<double> RansacAlgorithm::findHomography(const vector<PointMatch> &matches
     iota(choices.begin(), choices.end(), 0);
     vector<int> currentInliers;
     for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+        random_shuffle(choices.begin(), choices.end());
         auto homography = findCurrentHomography(matches, choices, K);
+        const double h22 = homography.at(8);
+        for (int i = 0; i < homography.size(); i++) {
+            homography[i] = homography[i] / h22;
+        }
         int index = 0;
         for (const PointMatch& match : matches) {
             const double denominator = countPartOfCoordinate(homography, 6, match);
@@ -34,7 +39,6 @@ vector<double> RansacAlgorithm::findHomography(const vector<PointMatch> &matches
 
 vector<double> RansacAlgorithm::findCurrentHomography(const vector<PointMatch> &matches, vector<int>& choices,
                                                       const int points) {
-    random_shuffle(choices.begin(), choices.end());
     gsl_matrix* matrix = gsl_matrix_calloc(2 * points, GSL_MATRIX_COLUMNS);
     for (int i = 0; i < points; i++) {
         const PointMatch& match = matches.at(choices.at(i));
@@ -79,11 +83,6 @@ vector<double> RansacAlgorithm::findCurrentHomography(const vector<PointMatch> &
     for (int i = 0; i < GSL_MATRIX_COLUMNS; i++) {
         double value = gsl_vector_get(&singularColumn.vector, i);
         homography.push_back(value);
-    }
-
-    const double h22 = homography.at(8);
-    for (int i = 0; i < homography.size(); i++) {
-        homography[i] = homography[i] / h22;
     }
 
     gsl_matrix_free(matrix);
