@@ -19,7 +19,7 @@ vector<Descriptor> Descriptor::buildDescriptors(
         if (harrisValue > harrisThreshold) {
             const MyImage sobelX = currentImage.convoluton(kernelSobelX, BorderType::MirrorBorder),
                           sobelY = currentImage.convoluton(kernelSObelY, BorderType::MirrorBorder);
-            const double sigma = center.sigma * M_SQRT2;
+            const double sigma = center.sigma;
             const int pointX = center.x, pointY = center.y;
             Descriptor notOriented = Descriptor(
                         sobelX, sobelY,

@@ -227,12 +227,18 @@ void MainWindow::ransac() {
         match.swapPoints();
     }
 
-    auto homography = RansacAlgorithm::findHomography(matches);
+    vector<PointMatch> inliers;
+    auto homography = RansacAlgorithm::findHomography(matches, inliers);
 
-    QImage result((qImage1.width() + qImage2.width()) / 2 * 1.1,
-                  (qImage1.height() + qImage2.height()) / 2 * 1.1,
+    auto resultOfInliers = drawMatches(qImage1, qImage2, inliers);
+    QString inliersString = QString("inliers-");
+    resultOfInliers.save(outputDir.absoluteFilePath(inliersString + imageName1 + imageName2 + ".jpg"), "jpg");
+
+    QImage result((qImage1.width() + qImage2.width()) / 2 * 1.8,
+                  (qImage1.height() + qImage2.height()) / 2 * 1.3,
                   QImage::Format_RGB32);
     QPainter painter(&result);
+    painter.translate(300, 0);
     painter.drawImage(0, 0, qImage2);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
@@ -240,7 +246,8 @@ void MainWindow::ransac() {
                          homography.at(1), homography.at(4), homography.at(7),
                          homography.at(2), homography.at(5), homography.at(8)
                          );
-    painter.setTransform(transform);
+    painter.setTransform(transform, true);
+
     painter.drawImage(0, 0, qImage1);
     result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
 }

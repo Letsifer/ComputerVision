@@ -5,7 +5,7 @@ RansacAlgorithm::RansacAlgorithm()
 
 }
 
-vector<double> RansacAlgorithm::findHomography(const vector<PointMatch> &matches) {
+vector<double> RansacAlgorithm::findHomography(const vector<PointMatch> &matches, vector<PointMatch>& result) {
     vector<int> inliers;
     vector<int> choices(matches.size());
     iota(choices.begin(), choices.end(), 0);
@@ -34,7 +34,16 @@ vector<double> RansacAlgorithm::findHomography(const vector<PointMatch> &matches
         }
         currentInliers.clear();
     }
-    return findCurrentHomography(matches, inliers, inliers.size());
+    auto homography = findCurrentHomography(matches, inliers, inliers.size());
+    for (int i = 0; i < inliers.size(); i++) {
+        PointMatch match = matches.at(inliers.at(i));
+        result.push_back(PointMatch(match.firstX, match.firstY, match.secondX, match.secondY));
+    }
+    const double h22 = homography.at(8);
+    for (int i = 0; i < homography.size(); i++) {
+        homography[i] = homography[i] / h22;
+    }
+    return homography;
 }
 
 vector<double> RansacAlgorithm::findCurrentHomography(const vector<PointMatch> &matches, vector<int>& choices,

@@ -7,6 +7,11 @@
 struct PointMatch {
     int firstX, firstY;
     int secondX, secondY;
+    PointMatch() {
+        firstX = 0; firstY = 0;
+        secondX = 0; secondY = 0;
+    }
+
     PointMatch(int firstX, int firstY, int secondX, int secondY) :
         firstX(firstX), firstY(firstY), secondX(secondX), secondY(secondY){}
     void swapPoints() {

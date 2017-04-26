@@ -31,9 +31,7 @@ class Pyramid
 
     Pyramid();
     Pyramid(int octaves, int scales);
-    void setElement(int i, int j, PyramidElement element) {
-        images[i * scales + j] = element;
-    }
+
     bool isExtremum(int octave, int scale, int i, int j) const;
 public:
     Pyramid(const MyImage& image, int octavesNumber, int scalesNumber);
@@ -42,6 +40,9 @@ public:
     void savePyramid(const QString filename);
     const PyramidElement& getElement(int i, int j) const{
         return images[i * scales + j];
+    }
+    void setElement(int i, int j, PyramidElement element) {
+        images[i * scales + j] = element;
     }
 };
 
