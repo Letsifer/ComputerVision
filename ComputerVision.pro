@@ -68,7 +68,9 @@ DISTFILES += \
     images/lena-min-for60-60.jpg \
     images/rounds.jpg \
     images/view1.jpg \
-    images/view2.jpg
+    images/view2.jpg \
+    images/image1.jpg \
+    images/image2.jpg
 
 unix|win32: LIBS += -L$$PWD/gslLib/ -lgsl
 
