@@ -63,12 +63,13 @@ vector<BlobsCenter> Pyramid::findExtremums() const {
     for (int octave = 0; octave < octaves; octave++) {
         for (int scale = 1; scale < scales - 1; scale++) {
             const double sigma = getElement(octave, scale).currentSigma;
+            const double globalSigma = getElement(octave, scale).globalSigma;
             const int width = getElement(octave, scale).image.getWidth(),
                      height = getElement(octave, scale).image.getHeight();
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
                     if (isExtremum(octave, scale, i, j)) {
-                        result.emplace_back(octave, scale, j, i, sigma);
+                        result.emplace_back(octave, scale, j, i, sigma, globalSigma);
                     }
                 }
             }

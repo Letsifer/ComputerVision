@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     interestpointsfinder.cpp \
     descriptorfinder.cpp \
     descriptormatcher.cpp \
-    ransacalgorithm.cpp
+    ransacalgorithm.cpp \
+    houghalgorithm.cpp
 
 HEADERS  += mainwindow.h \
     MyImage.h \
@@ -29,7 +30,8 @@ HEADERS  += mainwindow.h \
     interestpointsfinder.h \
     descriptorfinder.h \
     descriptormatcher.h \
-    ransacalgorithm.h
+    ransacalgorithm.h \
+    houghalgorithm.h
 
 FORMS    += mainwindow.ui
 

@@ -37,7 +37,7 @@ vector<double> RansacAlgorithm::findHomography(const vector<PointMatch> &matches
     auto homography = findCurrentHomography(matches, inliers, inliers.size());
     for (int i = 0; i < inliers.size(); i++) {
         PointMatch match = matches.at(inliers.at(i));
-        result.push_back(PointMatch(match.firstX, match.firstY, match.secondX, match.secondY));
+        result.push_back(PointMatch(match.firstX, match.firstY, 0, 0, match.secondX, match.secondY, 0, 0));
     }
     const double h22 = homography.at(8);
     for (int i = 0; i < homography.size(); i++) {

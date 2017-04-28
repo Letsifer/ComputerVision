@@ -18,7 +18,9 @@ struct BlobsCenter {
     int octave, scale;
     int x, y;
     double sigma;
-    BlobsCenter(int octave, int scale, int x, int y, double sigma) : octave(octave), scale(scale), x(x), y(y), sigma(sigma){}
+    double globalSigma;
+    BlobsCenter(int octave, int scale, int x, int y, double sigma, double globalSigma) :
+        octave(octave), scale(scale), x(x), y(y), sigma(sigma), globalSigma(globalSigma){}
 };
 
 class Pyramid

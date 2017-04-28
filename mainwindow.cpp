@@ -252,12 +252,84 @@ void MainWindow::ransac() {
     result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
 }
 
+void MainWindow::drawDescriptors(const QImage &image, const vector<Descriptor> &descriptors, const QString& name) {
+    QDir outputDir ("../images/lab9");
+    QImage result = QImage(image.width(), image.height(),
+                           QImage::Format_RGB32
+                           );
+    for (int i = 0; i < image.height(); i++) {
+        for (int j = 0; j < image.width(); j++) {
+            result.setPixel(j, i, image.pixel(j, i));
+        }
+    }
+    QPainter painter(&result);
+    QPen pen = QPen();
+    pen.setWidth(2);
+    pen.setColor(QColor(0, 255, 0));
+    painter.setPen(pen);
+    for (const Descriptor& desc : descriptors) {
+        painter.drawEllipse(QPointF(desc.getPointX(), desc.getPointY()), 3, 3);
+    }
+    QString matchString = QString("descriptors-");
+    result.save(outputDir.absoluteFilePath(matchString + name + ".jpg"), "jpg");
+}
+
+void MainWindow::hough() {
+    QDir inputImagesDir ("../ComputerVision/images");
+    QDir().mkdir("../images/lab9");
+    QDir outputDir ("../images/lab9");
+    ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
+
+    const QString imageName1("two_windows");
+    const QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
+    const MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
+    const auto firstVector = Descriptor::buildDescriptors(image1);
+    drawDescriptors(qImage1, firstVector, imageName1);
+
+    const QString imageName2("image2");
+    const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
+    const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
+    auto secondVector = Descriptor::buildDescriptors(image2);
+    drawDescriptors(qImage2, secondVector, imageName2);
+
+    auto matches = DescriptorMatcher::findMatchersBetweenDescriptors(secondVector, firstVector);
+
+    auto imageWithMatches = drawMatches(qImage2, qImage1, matches);
+    QString matchString = QString("matches-");
+    imageWithMatches.save(outputDir.absoluteFilePath(matchString + imageName1 + imageName2 + ".jpg"), "jpg");
+    for (PointMatch& match : matches) {
+        match.swapPoints();
+    }
+    if (matches.size() > 2) {
+        HoughTransforamtion transformation = HoughAlgorithm::getObjectsParameters(
+                    matches, qImage1.height(), qImage1.width(),
+                    qImage2.height(), qImage2.width());
+        const int widthFirst = qImage1.width(), heightFirst = qImage1.height();
+        const int centerInSecondX = transformation.x,
+                  centerInSecondY = transformation.y;
+        const int sizeInSecondX = widthFirst * transformation.scale,
+                  sizeInSecondY = heightFirst * transformation.scale;
+        QImage result = QImage(qImage2);
+        QPainter painter(&result);
+        painter.drawEllipse(QPointF(centerInSecondX, centerInSecondY), 10, 10);
+        QRect rect = QRect(centerInSecondX - sizeInSecondX / 2, centerInSecondY - sizeInSecondY / 2,
+                           sizeInSecondX, sizeInSecondY);
+        painter.drawRect(rect);
+        result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
+    } else {
+        ui->label->setText("Not enough matches");
+    }
+//    painter.rotate(transformation.angle);
+
+
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ransac();
+    hough();
 }
 
 MainWindow::~MainWindow()

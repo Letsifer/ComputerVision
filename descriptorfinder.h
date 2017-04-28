@@ -14,12 +14,16 @@ using namespace std;
 class Descriptor
 {
     int pointX, pointY;
+    double rotatedAngle;
+    int resultSizeOfGrid;
+    double sigmaGlobal;
 
     constexpr static int regionsX = 4, regionsY = 4;
     constexpr static int sizeOfGrid = 16;
+
     constexpr static int binsInHistogram = 8, manyBinsNumber = 36;
 
-    constexpr static double harrisThreshold = 0.0005;
+    constexpr static double harrisThreshold = 0.0002;
     constexpr static int scalesInOctave = 3, octaves = 5;
     constexpr static double BORDER_OF_CHOOSING_SECOND_PICK = 0.8;
 
@@ -54,13 +58,23 @@ public:
                int regionsX, int regionsY,
                int binsInHistogram, double angleShift,
                bool normalize,
-               double sigma, double basicSigma
+               double sigma, double basicSigma, double globalSigma
                );
     Descriptor(const Descriptor& sample);
     Descriptor& operator=(const Descriptor& sample);
 
     int getPointX() const {return pointX;}
     int getPointY() const {return pointY;}
+    double getRotatedAngle() const{
+        return rotatedAngle;
+    }
+    int getResultSizeOfGrid() const {
+        return resultSizeOfGrid;
+    }
+    double getSigmaGlobal() const {
+        return sigmaGlobal;
+    }
+
     double getElement(int i) const{
         return elements[i];
     }

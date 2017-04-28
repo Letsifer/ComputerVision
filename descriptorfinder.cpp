@@ -27,7 +27,7 @@ vector<Descriptor> Descriptor::buildDescriptors(
                         1, 1,
                         manyBinsNumber, 0,
                         false,
-                        sigma, basicSigma
+                        sigma, basicSigma, 0
                         );
             int indexOfMax = -1, indexOfSecondMax = -1;
             for (int i = 0; i < notOriented.sizeOfDescriptor; i++) {
@@ -47,7 +47,7 @@ vector<Descriptor> Descriptor::buildDescriptors(
                                 regionsX, regionsY,
                                 binsInHistogram, firstAngle,
                                 true,
-                                sigma, basicSigma
+                                sigma, basicSigma, center.globalSigma
                                 ));
             const double maxValue = notOriented.getElement(indexOfMax),
                          secondMaxValue = notOriented.getElement(indexOfSecondMax);
@@ -58,7 +58,7 @@ vector<Descriptor> Descriptor::buildDescriptors(
                                     regionsX, regionsY,
                                     binsInHistogram, secondAngle,
                                     true,
-                                    sigma, basicSigma
+                                    sigma, basicSigma, center.globalSigma
                                     ));
             }
         }
@@ -79,7 +79,8 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                        int pointX, int pointY,
                        int regionsX, int regionsY,
                        int binsInHistogram, double angleShift,
-                       bool makeNormalize, double sigma, double basicSigma
+                       bool makeNormalize, double sigma, double basicSigma,
+                       double globalSigma
                        ) : pointX(pointX), pointY(pointY){
     sizeOfDescriptor = regionsX * regionsY * binsInHistogram;
     elements = make_unique<double[]>((size_t)(sizeOfDescriptor));
@@ -95,6 +96,8 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
 
     const double sizeCoef = sigma / basicSigma;
     const int scaledSizeOfGrid = sizeCoef * sizeOfGrid;
+    resultSizeOfGrid = scaledSizeOfGrid * scaledSizeOfGrid;
+    this->sigmaGlobal = globalSigma;
 
     const double sizeOfRegionX = (double)scaledSizeOfGrid / regionsX,
                  sizeOfRegionY = (double)scaledSizeOfGrid / regionsY;
@@ -120,26 +123,15 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
 
             const int regionsIndexX = rotatedX / sizeOfRegionX / sizeCoef,
                       regionsIndexY = rotatedY / sizeOfRegionY / sizeCoef;
-            assert(regionsIndexX < regionsX && regionsIndexX >= 0);
-            assert(regionsIndexY < regionsY && regionsIndexY >= 0);
             const int regionsIndex = regionsIndexY * regionsX + regionsIndexX;
-            if (regionsIndex < 0 || regionsIndex >= regionsX*regionsY) {
-                assert(regionsIndex >= 0 && regionsIndex < regionsX*regionsY);
-            }
 
-            const double angle = getAngle(dx, dy, angleShift);
-            auto pair = getNeighborsToPoint(angle, binsInHistogram, centersOfBins);
+            this->rotatedAngle = getAngle(dx, dy, angleShift);
+            auto pair = getNeighborsToPoint(rotatedAngle, binsInHistogram, centersOfBins);
             const int first = pair.first, second = pair.second;
-
-            assert(regionsIndex * binsInHistogram + first >= 0);
-            assert(regionsIndex * binsInHistogram + first < sizeOfDescriptor);
             elements[regionsIndex * binsInHistogram + first] += pixel
-                    * findAngleCoefficient(angle, centersOfBins[first], centersOfBins[second]);
-
-            assert(regionsIndex * binsInHistogram + second >= 0);
-            assert(regionsIndex * binsInHistogram + second < sizeOfDescriptor);
+                    * findAngleCoefficient(rotatedAngle, centersOfBins[first], centersOfBins[second]);
             elements[regionsIndex * binsInHistogram + second] += pixel
-                    * findAngleCoefficient(angle, centersOfBins[second], centersOfBins[first]);
+                    * findAngleCoefficient(rotatedAngle, centersOfBins[second], centersOfBins[first]);
         }
     }
     if (makeNormalize) {
@@ -211,10 +203,13 @@ Descriptor::Descriptor(const Descriptor& sample) {
     pointY = sample.pointY;
 
     sizeOfDescriptor = sample.sizeOfDescriptor;
+    sigmaGlobal = sample.sigmaGlobal;
     elements = make_unique<double[]>((size_t)(sizeOfDescriptor));
     for (int i = 0; i < sizeOfDescriptor; i++) {
         elements[i] = sample.elements[i];
     }
+    rotatedAngle = sample.rotatedAngle;
+    resultSizeOfGrid = sample.resultSizeOfGrid;
 }
 
 Descriptor& Descriptor::operator=(const Descriptor& sample) {
@@ -223,6 +218,9 @@ Descriptor& Descriptor::operator=(const Descriptor& sample) {
     }
     pointX = sample.pointX;
     pointY = sample.pointY;
+    rotatedAngle = sample.rotatedAngle;
+    resultSizeOfGrid = sample.resultSizeOfGrid;
+    sigmaGlobal = sample.sigmaGlobal;
 
     sizeOfDescriptor = sample.sizeOfDescriptor;
     elements = make_unique<double[]>((size_t)(sizeOfDescriptor));

@@ -8,6 +8,7 @@
 #include "MyImage.h"
 #include "descriptorfinder.h"
 #include "ransacalgorithm.h"
+#include "houghalgorithm.h"
 
 #include <QTextStream>
 #include <QMainWindow>
@@ -36,7 +37,9 @@ class MainWindow : public QMainWindow
     void findBlobs();
 
     QImage drawMatches(const QImage& image1, const QImage& image2, const vector<PointMatch>& matches);
+    void drawDescriptors(const QImage& image, const vector<Descriptor>& descriptors, const QString& name);
     void ransac();
+    void hough();
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
