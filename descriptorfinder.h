@@ -13,17 +13,15 @@ using namespace std;
 
 class Descriptor
 {
-    int pointX, pointY;
-    double rotatedAngle;
-    int resultSizeOfGrid;
-    double sigmaGlobal;
+    InterestingPoint point;
 
     constexpr static int regionsX = 4, regionsY = 4;
     constexpr static int sizeOfGrid = 16;
 
     constexpr static int binsInHistogram = 8, manyBinsNumber = 36;
 
-    constexpr static double harrisThreshold = 0.0002;
+//    constexpr static double harrisThreshold = 0.0005; for ransac
+    constexpr static double harrisThreshold = 1e-4; //for hough
     constexpr static int scalesInOctave = 3, octaves = 5;
     constexpr static double BORDER_OF_CHOOSING_SECOND_PICK = 0.8;
 
@@ -33,7 +31,7 @@ class Descriptor
     unique_ptr<double[]> elements;
 
     void normalize();
-    double findAngleCoefficient(double angle, double center1, double center2) const;
+    double findAngleCoefficient(double angle, double centerOfAnotherBin, double basicValue) const;
     double findDistanceCoefficient(int x, int y, double sigma) const;
     double getAngle(double dx, double dy, double angleShift) const {
         double angle = atan2(dy, dx) - angleShift + M_PI;
@@ -47,7 +45,6 @@ class Descriptor
     }
 
     double getDistanceToCenterOfBin(double center, double angle) const;
-    pair<int, int> getNeighborsToPoint(double angle, int binsNumber, const unique_ptr<double[]>& centers) const;
     double calculateAngle(int index, int manyBinsNumber) const;
 public:
     static vector<Descriptor> buildDescriptors(
@@ -58,28 +55,17 @@ public:
                int regionsX, int regionsY,
                int binsInHistogram, double angleShift,
                bool normalize,
-               double sigma, double basicSigma, double globalSigma
+               double sigma, double basicSigma, double globalSigma, int octave
                );
     Descriptor(const Descriptor& sample);
     Descriptor& operator=(const Descriptor& sample);
 
-    int getPointX() const {return pointX;}
-    int getPointY() const {return pointY;}
-    double getRotatedAngle() const{
-        return rotatedAngle;
-    }
-    int getResultSizeOfGrid() const {
-        return resultSizeOfGrid;
-    }
-    double getSigmaGlobal() const {
-        return sigmaGlobal;
+    InterestingPoint getPoint() const {
+        return point;
     }
 
     double getElement(int i) const{
         return elements[i];
-    }
-    int getSize() const {
-        return sizeOfDescriptor;
     }
     double getDistance(const Descriptor& descriptor) const;    
 };

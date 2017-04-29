@@ -5,29 +5,14 @@
 #define DESCRIPTORMATCHER_H
 
 struct PointMatch {
-    int firstX, firstY;
-    double firstScale, firstOrientation;
-    int secondX, secondY;
-    double secondScale, secondOrientation;
+    InterestingPoint first, second;
     PointMatch() {
-        firstX = 0; firstY = 0;
-        secondX = 0; secondY = 0;
-        firstScale = 0; firstOrientation = 0;
-        secondScale = 0; secondOrientation = 0;
     }
 
-    PointMatch(int firstX, int firstY,
-               double firstOrientation, double firstScale,
-               int secondX, int secondY,
-               double secondOrientation, double secondScale) :
-        firstX(firstX), firstY(firstY), secondX(secondX), secondY(secondY),
-        firstScale(firstScale), firstOrientation(firstOrientation),
-        secondScale(secondScale), secondOrientation(secondOrientation){}
+    PointMatch(InterestingPoint first, InterestingPoint second) :
+        first(first), second(second){}
     void swapPoints() {
-        std::swap(firstX, secondX);
-        std::swap(firstY, secondY);
-        std::swap(firstScale, secondScale);
-        std::swap(firstOrientation, secondOrientation);
+        std::swap(first, second);
     }
 };
 

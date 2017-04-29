@@ -27,10 +27,8 @@ vector<PointMatch> DescriptorMatcher::findMatchersBetweenDescriptors(
         if (rate <= T) {
             Descriptor second = secondVector.at(indexMin);
             result.push_back(PointMatch(
-                                 descriptor.getPointX(), descriptor.getPointY(),
-                                 descriptor.getRotatedAngle(), descriptor.getSigmaGlobal(),
-                                 second.getPointX(), second.getPointY(),
-                                 second.getRotatedAngle(), second.getSigmaGlobal()
+                                 descriptor.getPoint(),
+                                 second.getPoint()
                                  ));
         }
     }

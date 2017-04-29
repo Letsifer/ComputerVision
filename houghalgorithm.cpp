@@ -5,10 +5,11 @@ HoughAlgorithm::HoughAlgorithm()
 
 }
 
-HoughTransforamtion HoughAlgorithm::getObjectsParameters(const vector<PointMatch> &matches, int heightOfFirstImage, int widthOfFirstImage,
+HoughTransforamtion HoughAlgorithm::getObjectsParameters(const vector<PointMatch> &matches,
+                                                         int heightOfFirstImage, int widthOfFirstImage,
                                                          int heightOfSecondImage, int widthOfSecondImage) {
-       const int sizeOFirstfImage = heightOfFirstImage * widthOfFirstImage;
-       const int sizeOfSecondImage = heightOfSecondImage * widthOfSecondImage;
+//       const int sizeOFirstfImage = heightOfFirstImage * widthOfFirstImage;
+//       const int sizeOfSecondImage = heightOfSecondImage * widthOfSecondImage;
        const int firstImageCenterX = widthOfFirstImage / 2,
                  firstImageCenterY = heightOfFirstImage / 2;
        const int binsX = widthOfSecondImage / coordinatesDelimeter,
@@ -35,29 +36,20 @@ HoughTransforamtion HoughAlgorithm::getObjectsParameters(const vector<PointMatch
        vector<int> indexesX, indexesY, indexesS, indexesA;
        for (const PointMatch& match : matches) {
            //переводим дескриптор в пространство относительно центра левого изображения
-           const int x1 = match.firstX - firstImageCenterX,
-                     y1 = match.firstY - firstImageCenterY;
+           const int x1 = match.first.getXInFirstImageScale() - firstImageCenterX,
+                     y1 = match.first.getYInFirstImageScale() - firstImageCenterY;
            const int length = hypot(x1, y1);
-           const double a1 = match.firstOrientation;
-//                        s1 = sizeOFirstfImage / ;
-//           const double secondScale = sizeOFirstfImage / ;
+           const double angleFromCenterOfFirstImage =
+                   match.second.rotationAngle - match.first.rotationAngle + atan2(y1, x1);
            //"раскодируем" параметры исходного объекта в пространство правого изображения
-           double angleDecode = a1 - match.secondOrientation;
-           const double scaleDecode = match.secondScale / match.firstScale,
-                        xDecode = match.secondX + length * scaleDecode * cos(angleDecode),
-                        yDecode = match.secondY + length * scaleDecode * sin(angleDecode);
-           if (angleDecode < 0) {
-               angleDecode += 2 * M_PI;
-           }
-           if (angleDecode > 2 * M_PI) {
-               angleDecode -= 2 * M_PI;
-           }
-           if (xDecode < 0  || xDecode >= widthOfSecondImage) {
-               continue;
-           }
-           if (yDecode < 0 && yDecode >= heightOfSecondImage) {
-               continue;
-           }
+
+           const double scaleDecode = match.second.globalSigma / match.first.globalSigma;
+           const double moveX = length * scaleDecode * cos(angleFromCenterOfFirstImage),
+                        moveY = length * scaleDecode * sin(angleFromCenterOfFirstImage);
+           const int xDecode = round(match.second.getXInFirstImageScale() - moveX),
+                     yDecode = round(match.second.getYInFirstImageScale() - moveY);
+           const double angleDecode = fmod(match.second.rotationAngle - match.first.rotationAngle + 2 * M_PI, 2 * M_PI);
+
            fillIndexVector(indexesX, xDecode, binsX, coordinatesDelimeter);
            fillIndexVector(indexesY, yDecode, binsY, coordinatesDelimeter);
            fillAngleVector(indexesA, angleDecode, anglesBins, 2 * M_PI / anglesBins);
@@ -122,9 +114,9 @@ int HoughAlgorithm::countIndex(int x, int y, int a, int s, int binsY) {
     return index;
 }
 
-void HoughAlgorithm::fillIndexVector(vector<int> &vector, const double value, const int bins, const int delimeter) {
-    double valueX = value / delimeter;
-    int indexX = valueX;
+void HoughAlgorithm::fillIndexVector(vector<int> &vector, const int value, const int bins, const int delimeter) {
+    double valueX = (double)value / delimeter;
+    int indexX = floor(valueX);
     vector.push_back(indexX);
     if (valueX > 0.5 && valueX < bins - 0.5) {//take two indexes
         if (valueX - indexX >= 0.5) {

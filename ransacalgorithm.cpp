@@ -22,7 +22,7 @@ vector<double> RansacAlgorithm::findHomography(const vector<PointMatch> &matches
             const double denominator = countPartOfCoordinate(homography, 6, match);
             const double resultX = countPartOfCoordinate(homography, 0, match) / denominator;
             const double resultY = countPartOfCoordinate(homography, 3, match) / denominator;
-            const double error = hypot(resultX - match.secondX, resultY - match.secondY);
+            const double error = hypot(resultX - match.second.x, resultY - match.second.y);
             if (error < EPS) {
                 currentInliers.push_back(index);
             }
@@ -37,7 +37,7 @@ vector<double> RansacAlgorithm::findHomography(const vector<PointMatch> &matches
     auto homography = findCurrentHomography(matches, inliers, inliers.size());
     for (int i = 0; i < inliers.size(); i++) {
         PointMatch match = matches.at(inliers.at(i));
-        result.push_back(PointMatch(match.firstX, match.firstY, 0, 0, match.secondX, match.secondY, 0, 0));
+        result.push_back(PointMatch(match.first, match.second));
     }
     const double h22 = homography.at(8);
     for (int i = 0; i < homography.size(); i++) {
@@ -52,25 +52,25 @@ vector<double> RansacAlgorithm::findCurrentHomography(const vector<PointMatch> &
     for (int i = 0; i < points; i++) {
         const PointMatch& match = matches.at(choices.at(i));
         const int firstRowIndex = 2 * i, secondRowIndex = 2 * i + 1;
-        gsl_matrix_set(matrix, firstRowIndex, 0, match.firstX);
-        gsl_matrix_set(matrix, firstRowIndex, 1, match.firstY);
+        gsl_matrix_set(matrix, firstRowIndex, 0, match.first.x);
+        gsl_matrix_set(matrix, firstRowIndex, 1, match.first.y);
         gsl_matrix_set(matrix, firstRowIndex, 2, 1);
         gsl_matrix_set(matrix, firstRowIndex, 3, 0);
         gsl_matrix_set(matrix, firstRowIndex, 4, 0);
         gsl_matrix_set(matrix, firstRowIndex, 5, 0);
-        gsl_matrix_set(matrix, firstRowIndex, 6, - match.secondX * match.firstX);
-        gsl_matrix_set(matrix, firstRowIndex, 7, - match.secondX * match.firstY);
-        gsl_matrix_set(matrix, firstRowIndex, 8, - match.secondX);
+        gsl_matrix_set(matrix, firstRowIndex, 6, - match.second.x * match.first.x);
+        gsl_matrix_set(matrix, firstRowIndex, 7, - match.second.x * match.first.y);
+        gsl_matrix_set(matrix, firstRowIndex, 8, - match.second.x);
 
         gsl_matrix_set(matrix, secondRowIndex, 0, 0);
         gsl_matrix_set(matrix, secondRowIndex, 1, 0);
         gsl_matrix_set(matrix, secondRowIndex, 2, 0);
-        gsl_matrix_set(matrix, secondRowIndex, 3, match.firstX);
-        gsl_matrix_set(matrix, secondRowIndex, 4, match.firstY);
+        gsl_matrix_set(matrix, secondRowIndex, 3, match.first.x);
+        gsl_matrix_set(matrix, secondRowIndex, 4, match.first.y);
         gsl_matrix_set(matrix, secondRowIndex, 5, 1);
-        gsl_matrix_set(matrix, secondRowIndex, 6, - match.secondY * match.firstX);
-        gsl_matrix_set(matrix, secondRowIndex, 7, - match.secondY * match.firstY);
-        gsl_matrix_set(matrix, secondRowIndex, 8, - match.secondY);
+        gsl_matrix_set(matrix, secondRowIndex, 6, - match.second.y * match.first.x);
+        gsl_matrix_set(matrix, secondRowIndex, 7, - match.second.y * match.first.y);
+        gsl_matrix_set(matrix, secondRowIndex, 8, - match.second.y);
     }
 
     gsl_matrix* transposed = gsl_matrix_calloc(GSL_MATRIX_COLUMNS, 2 * points);
@@ -105,5 +105,7 @@ vector<double> RansacAlgorithm::findCurrentHomography(const vector<PointMatch> &
 }
 
 double RansacAlgorithm::countPartOfCoordinate(const vector<double> &homography, const int startIndex, const PointMatch &match) {
-    return homography.at(startIndex) * match.firstX + homography.at(startIndex + 1) * match.firstY + homography.at(startIndex + 2);
+    return homography.at(startIndex) *
+            match.first.x + homography.at(startIndex + 1) *
+            match.first.y + homography.at(startIndex + 2);
 }

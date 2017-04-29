@@ -8,15 +8,34 @@ using namespace std;
 struct InterestingPoint {
     int x, y;
     double contrast;
-    double radiusToGreaterContrast;
-    double sigma;
-    InterestingPoint() : x(-1), y(-1), contrast(-1), radiusToGreaterContrast(numeric_limits<double>::max()){}
-    InterestingPoint(int x, int y) : x(x), y(y), contrast(0), radiusToGreaterContrast(0){}
-    InterestingPoint(int x, int y, double contrast) : x(x), y(y), contrast(contrast), radiusToGreaterContrast(numeric_limits<double>::max()){}
+    double rotationAngle;
+    double localSigma, globalSigma;
+    int octave;
+    InterestingPoint() : x(-1), y(-1), contrast(-1){}
+    InterestingPoint(int x, int y) : x(x), y(y), contrast(0){}
+    InterestingPoint(int x, int y, double contrast) : x(x), y(y), contrast(contrast){}
+    InterestingPoint(const InterestingPoint& point) {
+        x = point.x;
+        y = point.y;
+        contrast = point.contrast;
+        rotationAngle = point.rotationAngle;
+        localSigma = point.localSigma;
+        globalSigma = point.globalSigma;
+        octave = point.octave;
+    }
+
     double getDistance(const InterestingPoint point) const{
         return hypot(x - point.x, y - point.y);
     }
+    int getXInFirstImageScale() const {
+        return x * pow(2, octave);
+    }
+    int getYInFirstImageScale() const {
+        return y * pow(2, octave);
+    }
 };
+
+
 
 class InterestPointsFinder
 {

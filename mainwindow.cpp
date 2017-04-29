@@ -191,9 +191,20 @@ QImage MainWindow::drawMatches(const QImage &image1, const QImage &image2, const
         colorIndex = (colorIndex + 1) % colorNumber;
         pen.setColor(colors.at(colorIndex));
         painter.setPen(pen);
-        const int x1 = match.firstX, y1 = match.firstY,
-                  x2 = match.secondX + image1.width(),
-                  y2 = match.secondY;
+        const int x1 = match.first.getXInFirstImageScale(),
+                  y1 = match.first.getYInFirstImageScale(),
+                  x2 = match.second.getXInFirstImageScale() + image1.width(),
+                  y2 = match.second.getYInFirstImageScale();
+        painter.drawEllipse(QPointF(x1, y1), match.first.globalSigma, match.first.globalSigma);
+        painter.drawEllipse(QPointF(x2, y2), match.second.globalSigma, match.second.globalSigma);
+        const int length = 15;
+        const int x11 = x1 + length * cos(match.first.rotationAngle),
+                  y11 = y1 + length * sin(match.first.rotationAngle);
+        const int x22 = x2 + length * cos(match.first.rotationAngle),
+                  y22 = y2 + length * sin(match.second.rotationAngle);
+        painter.drawLine(x1, y1, x11, y11);
+        painter.drawLine(x2, y2, x22, y22);
+
         painter.drawLine(x1, y1, x2, y2);
     }
     return result;
@@ -268,7 +279,13 @@ void MainWindow::drawDescriptors(const QImage &image, const vector<Descriptor> &
     pen.setColor(QColor(0, 255, 0));
     painter.setPen(pen);
     for (const Descriptor& desc : descriptors) {
-        painter.drawEllipse(QPointF(desc.getPointX(), desc.getPointY()), 3, 3);
+        InterestingPoint point = desc.getPoint();
+        painter.drawEllipse(QPoint(point.getXInFirstImageScale(),
+                                   point.getYInFirstImageScale()), 3, 3);
+        const int length = 15;
+        const int x11 = point.getXInFirstImageScale() + length * cos(point.rotationAngle),
+                  y11 = point.getYInFirstImageScale() + length * sin(point.rotationAngle);
+        painter.drawLine(point.getXInFirstImageScale(), point.getYInFirstImageScale(), x11, y11);
     }
     QString matchString = QString("descriptors-");
     result.save(outputDir.absoluteFilePath(matchString + name + ".jpg"), "jpg");
@@ -280,13 +297,13 @@ void MainWindow::hough() {
     QDir outputDir ("../images/lab9");
     ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
 
-    const QString imageName1("two_windows");
+    const QString imageName1("sample_sign");
     const QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
     const MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
     const auto firstVector = Descriptor::buildDescriptors(image1);
     drawDescriptors(qImage1, firstVector, imageName1);
 
-    const QString imageName2("image2");
+    const QString imageName2("big_sign");
     const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
     const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
     auto secondVector = Descriptor::buildDescriptors(image2);

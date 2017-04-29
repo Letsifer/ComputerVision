@@ -63,9 +63,6 @@ double InterestPointsFinder::computeHarrisInOnePoint(const MyImage &image,
             C += fromGauss * fromGradientY * fromGradientY;
         }
     }
-//    double descr = sqrt((A - C) * (A - C) + 4*B*B);
-//    return min(abs((A + C - descr) / 2), abs((A + C + descr)/ 2));
-
     const double determinant = A * C - B * B,
                  trace = A + C;
     double contrast = determinant - k * trace * trace;
@@ -143,20 +140,35 @@ void InterestPointsFinder::adaptiveNonMaximumSuppression(
     if (points.size() <= necessaryPoints) {
         return;
     }
+    struct InterestingPointWithRadius {
+        int index;
+        double radiusToGreaterContrast;
+        InterestingPointWithRadius(int index)
+            : index(index), radiusToGreaterContrast(numeric_limits<double>::max()){}
+    };
     const double filterCoefficient = 1;
+    vector<InterestingPointWithRadius> pointsWithRadiuses;
+    for (int i = 0; i < points.size(); i++) {
+        pointsWithRadiuses.push_back(InterestingPointWithRadius(i));
+    }
     for (unsigned int i = 0; i < points.size(); i++) {
         for (unsigned int j = 0; j < points.size(); j++) {
             if (i == j) {
                 continue;
             }
             if (points[i].contrast * filterCoefficient >= points[j].contrast) {
-                points[j].radiusToGreaterContrast = min(points[j].radiusToGreaterContrast, points[i].getDistance(points[j]));
+                pointsWithRadiuses.at(j).radiusToGreaterContrast =
+                        min(pointsWithRadiuses.at(j).radiusToGreaterContrast, points[i].getDistance(points[j]));
             }
         }
     }
-    sort(points.begin(), points.end(),
+    sort(pointsWithRadiuses.begin(), pointsWithRadiuses.end(),
          [](const auto &point1, const auto &point2) {
         return point1.radiusToGreaterContrast > point2.radiusToGreaterContrast;
     });
-    points.resize(necessaryPoints);
+    vector<InterestingPoint> result;
+    for (int i = 0; i < necessaryPoints; i++) {
+        result.push_back(points.at(pointsWithRadiuses.at(i).index));
+    }
+    points = move(result);
 }

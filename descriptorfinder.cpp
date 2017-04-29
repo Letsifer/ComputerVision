@@ -27,7 +27,7 @@ vector<Descriptor> Descriptor::buildDescriptors(
                         1, 1,
                         manyBinsNumber, 0,
                         false,
-                        sigma, basicSigma, 0
+                        sigma, basicSigma, 0, center.octave
                         );
             int indexOfMax = -1, indexOfSecondMax = -1;
             for (int i = 0; i < notOriented.sizeOfDescriptor; i++) {
@@ -47,7 +47,7 @@ vector<Descriptor> Descriptor::buildDescriptors(
                                 regionsX, regionsY,
                                 binsInHistogram, firstAngle,
                                 true,
-                                sigma, basicSigma, center.globalSigma
+                                sigma, basicSigma, center.globalSigma, center.octave
                                 ));
             const double maxValue = notOriented.getElement(indexOfMax),
                          secondMaxValue = notOriented.getElement(indexOfSecondMax);
@@ -58,7 +58,7 @@ vector<Descriptor> Descriptor::buildDescriptors(
                                     regionsX, regionsY,
                                     binsInHistogram, secondAngle,
                                     true,
-                                    sigma, basicSigma, center.globalSigma
+                                    sigma, basicSigma, center.globalSigma, center.octave
                                     ));
             }
         }
@@ -80,8 +80,14 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                        int regionsX, int regionsY,
                        int binsInHistogram, double angleShift,
                        bool makeNormalize, double sigma, double basicSigma,
-                       double globalSigma
-                       ) : pointX(pointX), pointY(pointY){
+                       double globalSigma, int octave
+                       ) {
+    point = InterestingPoint(pointX, pointY);
+    point.octave = octave;
+    point.localSigma = sigma;
+    point.globalSigma = globalSigma;
+    point.rotationAngle = angleShift;
+
     sizeOfDescriptor = regionsX * regionsY * binsInHistogram;
     elements = make_unique<double[]>((size_t)(sizeOfDescriptor));
     for (int i = 0; i < sizeOfDescriptor; i++) {
@@ -89,15 +95,15 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
     }
 
     unique_ptr<double[]> centersOfBins = make_unique<double[]>((size_t)(binsInHistogram));
-    const double basicValue = M_PI / binsInHistogram;
+    const double centerBasicValue = M_PI / binsInHistogram;
     for (int i = 0; i < binsInHistogram; i++) {
-        centersOfBins[i] = (2 * i + 1) * basicValue;
+        centersOfBins[i] = (2 * i + 1) * centerBasicValue;
     }
+
+    const double basicValue = 2 * centerBasicValue;
 
     const double sizeCoef = sigma / basicSigma;
     const int scaledSizeOfGrid = sizeCoef * sizeOfGrid;
-    resultSizeOfGrid = scaledSizeOfGrid * scaledSizeOfGrid;
-    this->sigmaGlobal = globalSigma;
 
     const double sizeOfRegionX = (double)scaledSizeOfGrid / regionsX,
                  sizeOfRegionY = (double)scaledSizeOfGrid / regionsY;
@@ -115,23 +121,30 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                 rotatedY < 0 || rotatedY > scaledSizeOfGrid - 1) {
                 continue;
             }
-            const int x = pointX + j - halfSize + 1;
-            const int y = pointY + i - halfSize + 1;
-            const double dx = sobelX.getBorderPixel(y, x, BorderType::MirrorBorder),
-                         dy = sobelY.getBorderPixel(y, x, BorderType::MirrorBorder);
+            const int x =  j - halfSize + 1;
+            const int y =  i - halfSize + 1;
+            const double dx = sobelX.getBorderPixel(y + pointY, x + pointX, BorderType::MirrorBorder),
+                         dy = sobelY.getBorderPixel(y + pointY, x + pointX, BorderType::MirrorBorder);
             const double pixel = sqrt(dx*dx+dy*dy) * findDistanceCoefficient(x, y, sigma);
 
             const int regionsIndexX = rotatedX / sizeOfRegionX / sizeCoef,
                       regionsIndexY = rotatedY / sizeOfRegionY / sizeCoef;
             const int regionsIndex = regionsIndexY * regionsX + regionsIndexX;
 
-            this->rotatedAngle = getAngle(dx, dy, angleShift);
-            auto pair = getNeighborsToPoint(rotatedAngle, binsInHistogram, centersOfBins);
-            const int first = pair.first, second = pair.second;
-            elements[regionsIndex * binsInHistogram + first] += pixel
-                    * findAngleCoefficient(rotatedAngle, centersOfBins[first], centersOfBins[second]);
-            elements[regionsIndex * binsInHistogram + second] += pixel
-                    * findAngleCoefficient(rotatedAngle, centersOfBins[second], centersOfBins[first]);
+            double rotatedAngle = getAngle(dx, dy, angleShift);
+            int rightBin = floor(rotatedAngle / basicValue + 0.5);
+            int leftBin = rightBin - 1;
+            if (rightBin == binsInHistogram) {
+                rightBin = 0;
+            }
+            if (leftBin < 0) {
+                leftBin = binsInHistogram - 1;
+            }
+
+            elements[regionsIndex * binsInHistogram + leftBin] += pixel
+                    * findAngleCoefficient(rotatedAngle, centersOfBins[rightBin], basicValue);
+            elements[regionsIndex * binsInHistogram + rightBin] += pixel
+                    * findAngleCoefficient(rotatedAngle, centersOfBins[leftBin], basicValue);
         }
     }
     if (makeNormalize) {
@@ -155,12 +168,12 @@ void Descriptor::normalize() {
     }
 }
 
-double Descriptor::findAngleCoefficient(double angle, double center1, double center2) const{
-    return getDistanceToCenterOfBin(center2, angle) / getDistanceToCenterOfBin(center1, center2);
+double Descriptor::findAngleCoefficient(double angle, double centerOfAnotherBin, double basicValue) const{
+    return getDistanceToCenterOfBin(centerOfAnotherBin, angle) / basicValue;
 }
 
 double Descriptor::findDistanceCoefficient(int x, int y, double sigma) const {
-    return Kernel::canculateGaussInOnePoint(sigma, x - pointX, y - pointY);
+    return Kernel::canculateGaussInOnePoint(sigma, x, y);
 }
 
 double Descriptor::getDistance(const Descriptor& descriptor) const {
@@ -177,50 +190,21 @@ double Descriptor::getDistanceToCenterOfBin(double center, double angle) const{
     return min(absolutDistance, 2 * M_PI - absolutDistance);
 }
 
-pair<int, int> Descriptor::getNeighborsToPoint(const double angle, int binsNumber,
-                                               const unique_ptr<double[]>& centers) const {
-    int indexOfMin = -1, indexOfSecondMin = -1;
-    double minValue = numeric_limits<double>::max(), secondMinValue = minValue;
-    for (int i = 0; i < binsNumber; i++) {
-        double distanceToCenter = getDistanceToCenterOfBin(centers[i], angle);
-        if (minValue > distanceToCenter) {
-            indexOfSecondMin = indexOfMin;
-            secondMinValue = minValue;
-            indexOfMin = i;
-            minValue = distanceToCenter;
-            continue;
-        }
-        if (secondMinValue > distanceToCenter) {
-            indexOfSecondMin = i;
-            secondMinValue = distanceToCenter;
-        }
-    }
-    return pair<int, int>(indexOfMin, indexOfSecondMin);
-}
-
 Descriptor::Descriptor(const Descriptor& sample) {
-    pointX = sample.pointX;
-    pointY = sample.pointY;
+    point = InterestingPoint(sample.point);
 
     sizeOfDescriptor = sample.sizeOfDescriptor;
-    sigmaGlobal = sample.sigmaGlobal;
     elements = make_unique<double[]>((size_t)(sizeOfDescriptor));
     for (int i = 0; i < sizeOfDescriptor; i++) {
         elements[i] = sample.elements[i];
     }
-    rotatedAngle = sample.rotatedAngle;
-    resultSizeOfGrid = sample.resultSizeOfGrid;
 }
 
 Descriptor& Descriptor::operator=(const Descriptor& sample) {
     if (this == &sample) {
         return *this;
     }
-    pointX = sample.pointX;
-    pointY = sample.pointY;
-    rotatedAngle = sample.rotatedAngle;
-    resultSizeOfGrid = sample.resultSizeOfGrid;
-    sigmaGlobal = sample.sigmaGlobal;
+    point = InterestingPoint(sample.point);
 
     sizeOfDescriptor = sample.sizeOfDescriptor;
     elements = make_unique<double[]>((size_t)(sizeOfDescriptor));

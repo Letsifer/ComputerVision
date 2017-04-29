@@ -18,8 +18,8 @@ class HoughAlgorithm
     constexpr static int anglesBins = 6;
     constexpr static int scalesBins = 6;
     constexpr static double scaleStart = 1.0 / 8;
-    static void fillIndexVector(vector<int>& vector, double value, int bins, int delimeter);
-    static void fillAngleVector(vector<int> &vector, double value, int bins, double angleDelimeter);
+    static void fillIndexVector(vector<int>& vector, int value, int bins, int delimeter);
+    static void fillAngleVector(vector<int>& vector, double value, int bins, double angleDelimeter);
     static int countIndex(int x, int y, int a, int s, int binsY);
 public:
     HoughAlgorithm();
