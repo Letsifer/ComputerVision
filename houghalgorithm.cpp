@@ -78,7 +78,6 @@ HoughTransforamtion HoughAlgorithm::getObjectsParameters(const vector<PointMatch
                        for (const int s : indexesS) {
                            int index = countIndex(x, y, a, s, binsY);
                            accumulator[index]++;
-                           //mb rewrite
                            if (accumulator[index] > currentMax) {
                                currentMax = accumulator[index];
                                maxX = x;

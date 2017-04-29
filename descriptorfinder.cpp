@@ -140,7 +140,6 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
             if (leftBin < 0) {
                 leftBin = binsInHistogram - 1;
             }
-
             elements[regionsIndex * binsInHistogram + leftBin] += pixel
                     * findAngleCoefficient(rotatedAngle, centersOfBins[rightBin], basicValue);
             elements[regionsIndex * binsInHistogram + rightBin] += pixel
