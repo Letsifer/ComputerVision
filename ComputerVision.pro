@@ -72,7 +72,14 @@ DISTFILES += \
     images/view1.jpg \
     images/view2.jpg \
     images/image1.jpg \
-    images/image2.jpg
+    images/image2.jpg \
+    CourseWorkSamples/Samples/another_lightning.jpg \
+    CourseWorkSamples/Samples/big_sign.jpg \
+    CourseWorkSamples/Samples/big_sign_with_white.jpg \
+    CourseWorkSamples/Samples/little_sign.jpg \
+    CourseWorkSamples/Samples/no_sign.jpg \
+    CourseWorkSamples/Samples/sign_scene.jpg \
+    CourseWorkSamples/sign_sample.jpg
 
 unix|win32: LIBS += -L$$PWD/gslLib/ -lgsl
 
