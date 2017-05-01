@@ -50,10 +50,7 @@ class MainWindow : public QMainWindow
     vector<ImageAndResult> images;
 
     Q_OBJECT
-    void findBlobs();
-    QImage drawMatches(const QImage& image1, const QImage& image2, const vector<PointMatch>& matches);
-    void drawDescriptors(const QImage& image, const vector<Descriptor>& descriptors, const QString& name);
-    void ransac();
+
     void hough(const QImage object, ImageAndResult& container);
 
 public:
