@@ -6,64 +6,84 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>663</width>
-    <height>670</height>
+    <width>1130</width>
+    <height>740</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Course work</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QLabel" name="imageLabel">
+   <widget class="QLabel" name="objectLabel">
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>30</y>
-      <width>551</width>
-      <height>261</height>
+      <y>40</y>
+      <width>341</width>
+      <height>191</height>
      </rect>
     </property>
     <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="imageResult">
+   <widget class="QPushButton" name="findFileButton">
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>320</y>
-      <width>551</width>
-      <height>291</height>
+      <y>0</y>
+      <width>91</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string/>
+     <string>Find object's file</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QPushButton" name="fildFolderButton">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>10</y>
-      <width>591</width>
-      <height>20</height>
+      <x>640</x>
+      <y>0</y>
+      <width>131</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>TextLabel</string>
+     <string>Find folder</string>
     </property>
    </widget>
-   <widget class="QLabel" name="labelSigma">
+   <widget class="QListWidget" name="sceneFilesList">
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>40</y>
+      <width>281</width>
+      <height>201</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="showResultLabel">
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>300</y>
-      <width>271</width>
+      <y>240</y>
+      <width>621</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>TextLabel</string>
+     <string>Here you will see text result</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="resultView">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>260</y>
+      <width>1101</width>
+      <height>431</height>
+     </rect>
     </property>
    </widget>
   </widget>
@@ -72,7 +92,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>663</width>
+     <width>1130</width>
      <height>21</height>
     </rect>
    </property>

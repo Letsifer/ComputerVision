@@ -1,344 +1,42 @@
 #include "mainwindow.h"
 
-void MainWindow::lab1() {
-    //need 4 labels
-    QDir dir ("../ComputerVision/images");
-    QDir().mkdir("../images");
-    QPixmap pix(dir.absoluteFilePath("wall.jpg"));
-    ui->imageLabel->setPixmap(pix);
+const QString MainWindow::foundResultText = "Result was found for ";
+const QString MainWindow::notFoundResultText = "Result was not found for ";
+const QString MainWindow::notObjectFoundText = "Choose the object's image!";
 
+void MainWindow::hough(const QImage object, ImageAndResult& sceneContainer) {
+    sceneContainer.tryToFind = true;
+    const MyImage objectImage = MyImage::createMyImageFromQImage(object);
+    const auto firstVector = Descriptor::buildDescriptors(objectImage);
 
-    QImage image = pix.toImage();
-    auto mine = MyImage::createMyImageFromQImage(image);
-
-    auto convoltY = mine.convoluton(Kernel::createYSobelKernel(), BorderType::CopyBorder);
-    auto convoltX = mine.convoluton(Kernel::createXSobelKernel(), BorderType::CopyBorder);
-    convoltX.save("lab1SobelX.jpg");
-    convoltY.save("lab1SobelY.jpg");
-
-    auto resultSobelLab1 = convoltX.countHypotenuse(convoltY);
-    resultSobelLab1.save("lab1SobelResult.jpg");
-
-    ui->imageLabel->setPixmap(QPixmap::fromImage(resultSobelLab1.createQImageFromImage()));
-
-    double sigma = 5;
-    auto convoltGaussY = mine.convoluton(Kernel::createYGaussKernel(sigma), BorderType::CopyBorder);
-    auto convoltGaussX = mine.convoluton(Kernel::createXGaussKernel(sigma), BorderType::CopyBorder);
-    convoltGaussX.save("lab1GaussX.jpg");
-    convoltGaussY.save("lab1GaussY.jpg");
-
-    auto resultGaussLab1 = convoltGaussX.countHypotenuse(convoltGaussY);
-    resultGaussLab1.save("lab1GaussResult.jpg");
-
-    QDir dir2 ("../images");
-    ui->label->setText(dir2.absolutePath().append(" - all images are there"));
-    ui->labelSigma->setText(QString::fromStdString("sigma is " + to_string(sigma)));
-    ui->imageResult->setPixmap(QPixmap::fromImage(resultGaussLab1.createQImageFromImage()));
-}
-
-void MainWindow::lab2() {
-    QDir dir ("../ComputerVision/images");
-    QDir().mkdir("../images");
-    QString name("ialta.jpg");
-    QPixmap pix(dir.absoluteFilePath(name));
-    QImage image = pix.toImage();
-    auto mine = MyImage::createMyImageFromQImage(image);
-    const int scalesInOctave = 5, octaves = 3;
-    Pyramid pyramid = Pyramid(mine, octaves, scalesInOctave);
-    pyramid.savePyramid(name.append(QString::fromStdString("lab2-")));
-    QDir dir2 ("../images");
-    ui->label->setText(dir2.absolutePath().append(" - all images are there"));
-}
-
-void MainWindow::lab3() {
-    QDir dir ("../ComputerVision/images");
-    QDir().mkdir("../images/lab3");
-    QDir dir2 ("../images/lab3");
-    ui->label->setText(dir2.absolutePath().append(" - all images are there"));
-    QString name("lena.jpg");
-    QPixmap pix(dir.absoluteFilePath(name));
-    workWithImageInThirdLab(name, pix.toImage());
-//    QString imageName1("image1.jpg");
-//    QPixmap imagePix1(dir.absoluteFilePath(imageName1));
-//    workWithImageInThirdLab(imageName1, imagePix1.toImage());
-//    QString imageName2("image2.jpg");
-//    QPixmap imagePix2(dir.absoluteFilePath(imageName2));
-//    workWithImageInThirdLab(imageName2, imagePix2.toImage());
-}
-void MainWindow::workWithImageInThirdLab(const QString filename, const QImage& image) {
-    auto mine = MyImage::createMyImageFromQImage(image);
-    const int sizeOfWindow = 5, windowsShift = 1;
-    const double contrastMoravecBorder = 0.001;
-    auto points = InterestPointsFinder::moravecAlgorithm(
-                mine,
-                windowsShift,
-                sizeOfWindow,
-                contrastMoravecBorder,
-                BorderType::MirrorBorder
-                );
-    printForThirdLab(image, points, filename + QString::fromStdString("-moravecBeforeSuppresion.jpg"));
-    const int necessaryPoints = 150;
-    InterestPointsFinder::adaptiveNonMaximumSuppression(
-                points, necessaryPoints
-                );
-    string moravecAfterSuppression = "-moravecAfterSuppresion" + to_string(necessaryPoints) + "_points.jpg";
-    printForThirdLab(image, points, filename + QString::fromStdString(moravecAfterSuppression));
-
-    const double contrastHarrisBorder = 4;
-    points = InterestPointsFinder::harrisAlgorithm(mine, 7, contrastHarrisBorder, BorderType::MirrorBorder);
-    printForThirdLab(image, points, filename + QString::fromStdString("-harrisBeforeSuppresion.jpg"));
-    InterestPointsFinder::adaptiveNonMaximumSuppression(
-                points, necessaryPoints
-                );
-    string harrisAfterSuppression = "-harrisAfterSuppresion" + to_string(necessaryPoints) + "_points.jpg";
-    printForThirdLab(image, points, filename + QString::fromStdString(harrisAfterSuppression));
-}
-void MainWindow::printForThirdLab(QImage image, const vector<InterestingPoint> points, const QString filename) {
-    QPainter painter(&image);
-    painter.setPen(QColor(255, 0, 0));
-    const int radius = 6;
-    for (auto &point : points) {
-        painter.drawEllipse(point.x - radius / 2, point.y - radius / 2, radius, radius);
-    }
-    QDir dir ("../images/lab3");
-    image.save(dir.absoluteFilePath(filename), "jpg");
-}
-
-void MainWindow::lab4() {
-    QDir inputImagesDir ("../ComputerVision/images");
-    QDir().mkdir("../images/lab6");
-    QDir outputDir ("../images/lab6");
-    ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
-
-    const QString imageName1("lena");
-    const QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
-    const MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
-    const auto firstVector = Descriptor::buildDescriptors(image1);
-
-    const QString imageName2("lena-min-for45-45");
-    const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
-    const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
-    auto secondVector = Descriptor::buildDescriptors(image2);
-    auto matches = DescriptorMatcher::findMatchersBetweenDescriptors(firstVector, secondVector);
-    auto result = drawMatches(qImage1, qImage2, matches);
-    result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
-}
-
-void MainWindow::findBlobs() {
-    QDir inputImagesDir ("../ComputerVision/images");
-    QDir().mkdir("../images/lab6");
-    QDir outputDir ("../images/lab6");
-    ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
-
-    const QString imageName1("rounds");
-    QImage qImage = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
-    const MyImage image = MyImage::createMyImageFromQImage(qImage);
-    const int scalesInOctave = 3, octaves = 5;
-    const Pyramid pyramid = Pyramid(image, octaves, scalesInOctave);
-    auto centers = pyramid.createDogPyramid().findExtremums();
-
-    const double harrisThreshold = 0.001;
-    QPainter painter(&qImage);
-    QPen pen = QPen();
-    pen.setWidth(1);
-    pen.setColor(QColor(0, 255, 0));
-    painter.setPen(pen);
-    for (const BlobsCenter& center : centers) {
-        const double radius = center.sigma * M_SQRT2;
-        const double harrisValue = InterestPointsFinder::computeHarrisInOnePoint(
-                    pyramid.getElement(center.octave, center.scale).image,
-                    center.y, center.x, radius
-                    );
-        if (harrisValue > harrisThreshold) {
-            const double sizeFactor = pow(2.0, center.octave);
-            const double realRedius = radius * sizeFactor;
-            painter.setPen(pen);
-            painter.drawEllipse(QPointF(center.x * sizeFactor, center.y * sizeFactor),
-                                realRedius, realRedius);
-        }
-    }
-    qImage.save(outputDir.absoluteFilePath(imageName1 + ".jpg"), "jpg");
-}
-
-QImage MainWindow::drawMatches(const QImage &image1, const QImage &image2, const vector<PointMatch> &matches) {
-    QImage result = QImage(image1.width() + image2.width(),
-                           max(image1.height(), image2.height()),
-                           QImage::Format_RGB32
-                           );
-    for (int i = 0; i < image1.height(); i++) {
-        for (int j = 0; j < image1.width(); j++) {
-            result.setPixel(j, i, image1.pixel(j, i));
-        }
-    }
-    for (int i = 0, shift = image1.width(); i < image2.height(); i++) {
-        for (int j = 0; j < image2.width(); j++) {
-            result.setPixel(j + shift, i, image2.pixel(j, i));
-        }
-    }
-
-    QPainter painter(&result);
-    QPen pen = QPen();
-    pen.setWidth(2);
-    painter.setPen(pen);
-    int colorIndex = 0;
-    vector<QColor> colors;
-    colors.push_back(QColor(255, 0, 0)); //red
-    colors.push_back(QColor(0, 255, 0)); //green
-    colors.push_back(QColor(0, 0, 255)); //blue
-    colors.push_back(QColor(0, 0, 0)); //black
-    const int colorNumber = colors.size();
-    for (const PointMatch& match : matches) {
-        colorIndex = (colorIndex + 1) % colorNumber;
-        pen.setColor(colors.at(colorIndex));
-        painter.setPen(pen);
-        const int x1 = match.first.getXInFirstImageScale(),
-                  y1 = match.first.getYInFirstImageScale(),
-                  x2 = match.second.getXInFirstImageScale() + image1.width(),
-                  y2 = match.second.getYInFirstImageScale();
-        painter.drawEllipse(QPointF(x1, y1), match.first.globalSigma, match.first.globalSigma);
-        painter.drawEllipse(QPointF(x2, y2), match.second.globalSigma, match.second.globalSigma);
-        const int length = 15;
-        const int x11 = x1 + length * cos(match.first.rotationAngle),
-                  y11 = y1 + length * sin(match.first.rotationAngle);
-        const int x22 = x2 + length * cos(match.first.rotationAngle),
-                  y22 = y2 + length * sin(match.second.rotationAngle);
-        painter.drawLine(x1, y1, x11, y11);
-        painter.drawLine(x2, y2, x22, y22);
-
-        painter.drawLine(x1, y1, x2, y2);
-    }
-    return result;
-}
-
-void MainWindow::ransac() {
-    QDir inputImagesDir ("../ComputerVision/images");
-    QDir().mkdir("../images/lab8");
-    QDir outputDir ("../images/lab8");
-    ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
-
-    const QString imageName1("image1");
-    QString filepath = inputImagesDir.absoluteFilePath(imageName1 + ".jpg");
-    QPixmap pix = QPixmap(filepath);
-    const QImage qImage1 = pix.toImage();
-    const MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
-    const auto firstVector = Descriptor::buildDescriptors(image1);
-
-    const QString imageName2("image2");
-    const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
-    const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
-    auto secondVector = Descriptor::buildDescriptors(image2);
-
-    auto matches = DescriptorMatcher::findMatchersBetweenDescriptors(firstVector, secondVector);
-
-    auto resultOfMatches = drawMatches(qImage1, qImage2, matches);
-    QString matchString = QString("matches-");
-    resultOfMatches.save(outputDir.absoluteFilePath(matchString + imageName1 + imageName2 + ".jpg"), "jpg");
-
-    for (PointMatch match : matches) {
-        match.swapPoints();
-    }
-
-    vector<PointMatch> inliers;
-    auto homography = RansacAlgorithm::findHomography(matches, inliers);
-
-    auto resultOfInliers = drawMatches(qImage1, qImage2, inliers);
-    QString inliersString = QString("inliers-");
-    resultOfInliers.save(outputDir.absoluteFilePath(inliersString + imageName1 + imageName2 + ".jpg"), "jpg");
-
-    QImage result((qImage1.width() + qImage2.width()) / 2 * 1.8,
-                  (qImage1.height() + qImage2.height()) / 2 * 1.3,
-                  QImage::Format_RGB32);
-    QPainter painter(&result);
-    painter.translate(300, 0);
-    painter.drawImage(0, 0, qImage2);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setRenderHint(QPainter::SmoothPixmapTransform);
-    QTransform transform(homography.at(0), homography.at(3), homography.at(6),
-                         homography.at(1), homography.at(4), homography.at(7),
-                         homography.at(2), homography.at(5), homography.at(8)
-                         );
-    painter.setTransform(transform, true);
-
-    painter.drawImage(0, 0, qImage1);
-    result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
-}
-
-void MainWindow::drawDescriptors(const QImage &image, const vector<Descriptor> &descriptors, const QString& name) {
-    QDir outputDir ("../images/lab9");
-    QImage result = QImage(image.width(), image.height(),
-                           QImage::Format_RGB32
-                           );
-    for (int i = 0; i < image.height(); i++) {
-        for (int j = 0; j < image.width(); j++) {
-            result.setPixel(j, i, image.pixel(j, i));
-        }
-    }
-    QPainter painter(&result);
-    QPen pen = QPen();
-    pen.setWidth(2);
-    pen.setColor(QColor(0, 255, 0));
-    painter.setPen(pen);
-    for (const Descriptor& desc : descriptors) {
-        InterestingPoint point = desc.getPoint();
-        painter.drawEllipse(QPoint(point.getXInFirstImageScale(),
-                                   point.getYInFirstImageScale()), 3, 3);
-        const int length = 15;
-        const int x11 = point.getXInFirstImageScale() + length * cos(point.rotationAngle),
-                  y11 = point.getYInFirstImageScale() + length * sin(point.rotationAngle);
-        painter.drawLine(point.getXInFirstImageScale(), point.getYInFirstImageScale(), x11, y11);
-    }
-    QString matchString = QString("descriptors-");
-    result.save(outputDir.absoluteFilePath(matchString + name + ".jpg"), "jpg");
-}
-
-void MainWindow::hough() {
-    QDir inputImagesDir ("../ComputerVision/images");
-    QDir().mkdir("../images/lab9");
-    QDir outputDir ("../images/lab9");
-    ui->label->setText(outputDir.absolutePath().append(" - all images are there"));
-
-    const QString imageName1("sample_sign");
-    const QImage qImage1 = QPixmap(inputImagesDir.absoluteFilePath(imageName1 + ".jpg")).toImage();
-    const MyImage image1 = MyImage::createMyImageFromQImage(qImage1);
-    const auto firstVector = Descriptor::buildDescriptors(image1);
-    drawDescriptors(qImage1, firstVector, imageName1);
-
-    const QString imageName2("big_sign");
-    const QImage qImage2 = QPixmap(inputImagesDir.absoluteFilePath(imageName2 + ".jpg")).toImage();
-    const MyImage image2 = MyImage::createMyImageFromQImage(qImage2);
-    auto secondVector = Descriptor::buildDescriptors(image2);
-    drawDescriptors(qImage2, secondVector, imageName2);
+    const MyImage sceneImage = MyImage::createMyImageFromQImage(sceneContainer.original);
+    auto secondVector = Descriptor::buildDescriptors(sceneImage);
 
     auto matches = DescriptorMatcher::findMatchersBetweenDescriptors(secondVector, firstVector);
-
-    auto imageWithMatches = drawMatches(qImage2, qImage1, matches);
-    QString matchString = QString("matches-");
-    imageWithMatches.save(outputDir.absoluteFilePath(matchString + imageName1 + imageName2 + ".jpg"), "jpg");
     for (PointMatch& match : matches) {
         match.swapPoints();
     }
-    if (matches.size() > 2) {
+    if (matches.size() >= BORDER_TO_FIND_HOUGH_OBJECT) {
+        sceneContainer.foundResult = true;
+        const int widthFirst = object.width(), heightFirst = object.height();
         HoughTransforamtion transformation = HoughAlgorithm::getObjectsParameters(
-                    matches, qImage1.height(), qImage1.width(),
-                    qImage2.height(), qImage2.width());
-        const int widthFirst = qImage1.width(), heightFirst = qImage1.height();
+                    matches,
+                    heightFirst, widthFirst,
+                    sceneContainer.original.height(), sceneContainer.original.width()
+                    );
+
         const int centerInSecondX = transformation.x,
                   centerInSecondY = transformation.y;
         const int sizeInSecondX = widthFirst * transformation.scale,
                   sizeInSecondY = heightFirst * transformation.scale;
-        QImage result = QImage(qImage2);
+        QImage result = QImage(sceneContainer.original);
         QPainter painter(&result);
         painter.drawEllipse(QPointF(centerInSecondX, centerInSecondY), 10, 10);
         QRect rect = QRect(centerInSecondX - sizeInSecondX / 2, centerInSecondY - sizeInSecondY / 2,
                            sizeInSecondX, sizeInSecondY);
         painter.drawRect(rect);
-        result.save(outputDir.absoluteFilePath(imageName1 + imageName2 + ".jpg"), "jpg");
-    } else {
-        ui->label->setText("Not enough matches");
+        sceneContainer.result = result;
     }
-//    painter.rotate(transformation.angle);
-
-
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -346,10 +44,66 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    hough();
+    connect(ui->findFileButton, SIGNAL(clicked(bool)), this, SLOT(onFindFileButtonClicked()));
+    connect(ui->fildFolderButton, SIGNAL(clicked(bool)), this, SLOT(onFindFolderButtonClicked()));
+    connect(ui->sceneFilesList, SIGNAL(clicked(QModelIndex)), this, SLOT(clickOnItem(QModelIndex)));
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+void MainWindow::onFindFileButtonClicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Find file with object"), "..", tr("Jpg files (*.jpg)"));
+    const QPixmap objectPixmap = QPixmap(fileName);
+    ui->objectLabel->setPixmap(objectPixmap);
+    object = objectPixmap.toImage();
+    for (ImageAndResult container : images) {
+        container.tryToFind = false;
+        container.foundResult = false;
+    }
+}
+
+void MainWindow::onFindFolderButtonClicked() {
+    QFileDialog dialog;
+    dialog.setFileMode(QFileDialog::Directory);
+    dialog.setDirectory("..");
+    int result = dialog.exec();
+    if (result) {
+        ui->sceneFilesList->clear();
+        images.clear();
+        QString directoryPath = dialog.selectedFiles()[0];
+        QDir directory = QDir(directoryPath);
+        foreach (const QString& filename, directory.entryList(QStringList("*.jpg"), QDir::Files)) {
+            ui->sceneFilesList->addItem(filename);
+            QString absolutePath = directory.absoluteFilePath(filename);
+            qDebug() << absolutePath;
+            images.emplace_back(filename, QPixmap(absolutePath).toImage());
+        }
+    }
+}
+
+void MainWindow::clickOnItem(const QModelIndex &index) {
+    if (object.isNull()) {
+        QMessageBox box;
+        box.setText(notObjectFoundText);
+        box.exec();
+        return;
+    }
+    const int indexOfObject = index.row();
+    ImageAndResult& container = images.at(indexOfObject);
+    if (!container.tryToFind) {
+        hough(object, container);
+    }
+    QGraphicsScene* scene = new QGraphicsScene(this);
+    if (container.foundResult) {
+        ui->showResultLabel->setText(foundResultText + container.filename);
+        scene->addPixmap(QPixmap::fromImage(container.result));
+    } else {
+        ui->showResultLabel->setText(notFoundResultText + container.filename);
+        scene->addPixmap(QPixmap::fromImage(container.original));
+    }
+    ui->resultView->setScene(scene);
+    ui->resultView->show();
 }

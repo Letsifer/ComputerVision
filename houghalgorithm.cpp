@@ -8,8 +8,6 @@ HoughAlgorithm::HoughAlgorithm()
 HoughTransforamtion HoughAlgorithm::getObjectsParameters(const vector<PointMatch> &matches,
                                                          int heightOfFirstImage, int widthOfFirstImage,
                                                          int heightOfSecondImage, int widthOfSecondImage) {
-//       const int sizeOFirstfImage = heightOfFirstImage * widthOfFirstImage;
-//       const int sizeOfSecondImage = heightOfSecondImage * widthOfSecondImage;
        const int firstImageCenterX = widthOfFirstImage / 2,
                  firstImageCenterY = heightOfFirstImage / 2;
        const int binsX = widthOfSecondImage / coordinatesDelimeter,
