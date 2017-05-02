@@ -93,14 +93,16 @@ HoughTransforamtion HoughAlgorithm::getObjectsParameters(const vector<PointMatch
            indexesA.clear();
            indexesS.clear();
        }
-       //take the center ob bin
-       HoughTransforamtion t = HoughTransforamtion(
-                   (maxX + 0.5) * coordinatesDelimeter,
-                   (maxY + 0.5) * coordinatesDelimeter,
-                   (maxA + 0.5) * M_PI / anglesBins,
-                   centers[maxS]
-                   );
-       return t;
+       if (currentMax >= VOTES_BORDER) {
+           //take the center ob bin
+           return HoughTransforamtion(
+                       (maxX + 0.5) * coordinatesDelimeter,
+                       (maxY + 0.5) * coordinatesDelimeter,
+                       (maxA + 0.5) * M_PI / anglesBins,
+                       centers[maxS]
+                       );
+       }
+       return HoughTransforamtion();
 }
 
 int HoughAlgorithm::countIndex(int x, int y, int a, int s, int binsY) {

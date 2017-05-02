@@ -7,13 +7,16 @@
 using namespace std;
 
 struct HoughTransforamtion {
+    bool found;
     double x, y, scale, angle;
+    HoughTransforamtion() : found(false){}
     HoughTransforamtion(double x, double y, double angle, double scale) :
-        x(x), y(y), angle(angle), scale(scale){}
+        x(x), y(y), angle(angle), scale(scale), found(true){}
 };
 
 class HoughAlgorithm
 {
+    constexpr static int VOTES_BORDER = 5;
     constexpr static int coordinatesDelimeter = 20;
     constexpr static int anglesBins = 6;
     constexpr static int scalesBins = 6;

@@ -17,25 +17,26 @@ void MainWindow::hough(const QImage object, ImageAndResult& sceneContainer) {
         match.swapPoints();
     }
     if (matches.size() >= BORDER_TO_FIND_HOUGH_OBJECT) {
-        sceneContainer.foundResult = true;
         const int widthFirst = object.width(), heightFirst = object.height();
         HoughTransforamtion transformation = HoughAlgorithm::getObjectsParameters(
                     matches,
                     heightFirst, widthFirst,
                     sceneContainer.original.height(), sceneContainer.original.width()
                     );
-
-        const int centerInSecondX = transformation.x,
-                  centerInSecondY = transformation.y;
-        const int sizeInSecondX = widthFirst * transformation.scale,
-                  sizeInSecondY = heightFirst * transformation.scale;
-        QImage result = QImage(sceneContainer.original);
-        QPainter painter(&result);
-        painter.drawEllipse(QPointF(centerInSecondX, centerInSecondY), 10, 10);
-        QRect rect = QRect(centerInSecondX - sizeInSecondX / 2, centerInSecondY - sizeInSecondY / 2,
-                           sizeInSecondX, sizeInSecondY);
-        painter.drawRect(rect);
-        sceneContainer.result = result;
+        if (transformation.found) {
+            sceneContainer.foundResult = true;
+            const int centerInSecondX = transformation.x,
+                      centerInSecondY = transformation.y;
+            const int sizeInSecondX = widthFirst * transformation.scale,
+                      sizeInSecondY = heightFirst * transformation.scale;
+            QImage result = QImage(sceneContainer.original);
+            QPainter painter(&result);
+            painter.drawEllipse(QPointF(centerInSecondX, centerInSecondY), 10, 10);
+            QRect rect = QRect(centerInSecondX - sizeInSecondX / 2, centerInSecondY - sizeInSecondY / 2,
+                               sizeInSecondX, sizeInSecondY);
+            painter.drawRect(rect);
+            sceneContainer.result = result;
+        }
     }
 }
 

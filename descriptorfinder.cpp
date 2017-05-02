@@ -10,6 +10,8 @@ vector<Descriptor> Descriptor::buildDescriptors(
     const Kernel kernelSobelX = Kernel::createXSobelKernel(),
                  kernelSObelY = Kernel::createYSobelKernel();
     vector<Descriptor> result;
+    int currentOctave = -1, currentScale = -1;
+    MyImage sobelX, sobelY;
     for (const BlobsCenter& center : centers) {
         const MyImage currentImage = pyramid.getElement(center.octave, center.scale).image;
         const double harrisValue = InterestPointsFinder::computeHarrisInOnePoint(
@@ -17,8 +19,12 @@ vector<Descriptor> Descriptor::buildDescriptors(
                     center.y, center.x, center.sigma * M_SQRT2
                     );
         if (harrisValue > harrisThreshold) {
-            const MyImage sobelX = currentImage.convoluton(kernelSobelX, BorderType::MirrorBorder),
-                          sobelY = currentImage.convoluton(kernelSObelY, BorderType::MirrorBorder);
+            if (center.octave != currentOctave || center.scale != currentScale) {
+                sobelX = currentImage.convoluton(kernelSobelX, BorderType::MirrorBorder);
+                sobelY = currentImage.convoluton(kernelSObelY, BorderType::MirrorBorder);
+                currentOctave = center.octave;
+                currentScale = center.scale;
+            }
             const double sigma = center.sigma;
             const int pointX = center.x, pointY = center.y;
             Descriptor notOriented = Descriptor(
