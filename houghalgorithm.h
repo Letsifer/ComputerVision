@@ -16,7 +16,7 @@ struct HoughTransforamtion {
 
 class HoughAlgorithm
 {
-    constexpr static int VOTES_BORDER = 5;
+    constexpr static int VOTES_BORDER = 3;
     constexpr static int coordinatesDelimeter = 20;
     constexpr static int anglesBins = 6;
     constexpr static int scalesBins = 6;

@@ -77,7 +77,13 @@ double Descriptor::calculateAngle(const int index, const int binsNumber) const {
     const double center = elements[index];
     const double right = elements[(index + 1) % binsNumber];
     const double x = -0.5 * (right - left) / (left - 2.0 * center + right);
-    const double angle = 2.0 * M_PI * (x + 0.5 + index) / binsNumber;
+    double angle = 2.0 * M_PI * (x + 0.5 + index) / binsNumber;
+    if (angle < 0) {
+        angle += 2 * M_PI;
+    }
+    if (angle >= 2 * M_PI) {
+        angle -= 2 * M_PI;
+    }
     return angle;
 }
 
@@ -111,8 +117,8 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
     const double sizeCoef = sigma / basicSigma;
     const int scaledSizeOfGrid = sizeCoef * sizeOfGrid;
 
-    const double sizeOfRegionX = (double)scaledSizeOfGrid / regionsX,
-                 sizeOfRegionY = (double)scaledSizeOfGrid / regionsY;
+    const double sizeOfRegionX = (double)scaledSizeOfGrid * sizeCoef / regionsX ,
+                 sizeOfRegionY = (double)scaledSizeOfGrid * sizeCoef / regionsY;
 
     const double cosOfAngle = cos(angleShift),
                  sinOfAngle = sin(angleShift);
@@ -133,8 +139,8 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
                          dy = sobelY.getBorderPixel(y + pointY, x + pointX, BorderType::MirrorBorder);
             const double pixel = sqrt(dx*dx+dy*dy) * findDistanceCoefficient(x, y, sigma);
 
-            const int regionsIndexX = rotatedX / sizeOfRegionX / sizeCoef,
-                      regionsIndexY = rotatedY / sizeOfRegionY / sizeCoef;
+            const int regionsIndexX = rotatedX / sizeOfRegionX,
+                      regionsIndexY = rotatedY / sizeOfRegionY;
             const int regionsIndex = regionsIndexY * regionsX + regionsIndexX;
 
             double rotatedAngle = getAngle(dx, dy, angleShift);
@@ -146,10 +152,50 @@ Descriptor::Descriptor(const MyImage& sobelX, const MyImage& sobelY,
             if (leftBin < 0) {
                 leftBin = binsInHistogram - 1;
             }
-            elements[regionsIndex * binsInHistogram + leftBin] += pixel
-                    * findAngleCoefficient(rotatedAngle, centersOfBins[rightBin], basicValue);
-            elements[regionsIndex * binsInHistogram + rightBin] += pixel
-                    * findAngleCoefficient(rotatedAngle, centersOfBins[leftBin], basicValue);
+
+            if (regionsX * regionsY == 1) {
+                assert(regionsIndex * binsInHistogram + leftBin >= 0 &&
+                       regionsIndex * binsInHistogram + leftBin < sizeOfDescriptor);
+                elements[regionsIndex * binsInHistogram + leftBin] += pixel
+                        * findAngleCoefficient(rotatedAngle, centersOfBins[rightBin], basicValue);
+                assert(regionsIndex * binsInHistogram + rightBin >= 0 &&
+                       regionsIndex * binsInHistogram + rightBin < sizeOfDescriptor);
+                elements[regionsIndex * binsInHistogram + rightBin] += pixel
+                        * findAngleCoefficient(rotatedAngle, centersOfBins[leftBin], basicValue);
+            } else {
+                const bool moveRight = rotatedX / sizeCoef - regionsIndexX * sizeOfRegionX >= sizeOfRegionX / 2,
+                           moveBot = rotatedY / sizeCoef - regionsIndexY * sizeOfRegionY >= sizeOfRegionY / 2;
+                for (int dx = 0; dx < 2; dx++) {
+                    const int movedRegionsIndexX = regionsIndexX + dx * (moveRight ? 1 : -1);
+                    if (movedRegionsIndexX < 0 || movedRegionsIndexX >= regionsX) {
+                        continue;
+                    }
+                    const int hystogrammCenterX = movedRegionsIndexX * sizeOfRegionX + sizeOfRegionX / 2;
+                    const double weightX = abs(rotatedX / sizeCoef - hystogrammCenterX) / (double) sizeOfRegionX;
+                    for (int dy = 0; dy < 2; dy++) {
+                        const int movedRegionsIndexY = regionsIndexY + dy * (moveBot ? 1 : -1);
+                        if (movedRegionsIndexY < 0 || movedRegionsIndexY >= regionsY) {
+                            continue;
+                        }
+                        const int movedRegionsIndex = movedRegionsIndexY * regionsX + movedRegionsIndexX;
+
+                        const int hystogrammCenterY = movedRegionsIndexY * sizeOfRegionY + sizeOfRegionY / 2;
+                        const double weightY = abs(rotatedY / sizeCoef - hystogrammCenterY) / (double) sizeOfRegionY;
+
+                        assert(movedRegionsIndex * binsInHistogram + leftBin >= 0 &&
+                               movedRegionsIndex * binsInHistogram + leftBin < sizeOfDescriptor);
+
+                        assert(movedRegionsIndex * binsInHistogram + rightBin >= 0 &&
+                               movedRegionsIndex * binsInHistogram + rightBin < sizeOfDescriptor);
+
+                        elements[movedRegionsIndex * binsInHistogram + leftBin] += pixel
+                                * findAngleCoefficient(rotatedAngle, centersOfBins[rightBin], basicValue) * weightX * weightY;
+                        elements[movedRegionsIndex * binsInHistogram + rightBin] += pixel
+                                * findAngleCoefficient(rotatedAngle, centersOfBins[leftBin], basicValue) * weightX * weightY;
+                    }
+                }
+            }
+
         }
     }
     if (makeNormalize) {
