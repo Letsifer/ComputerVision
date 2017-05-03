@@ -48,6 +48,10 @@ HoughTransforamtion HoughAlgorithm::getObjectsParameters(const vector<PointMatch
                      yDecode = round(match.second.getYInFirstImageScale() - moveY);
            const double angleDecode = fmod(match.second.rotationAngle - match.first.rotationAngle + 2 * M_PI, 2 * M_PI);
 
+           if (xDecode < 0 || yDecode < 0) {
+               continue;
+           }
+
            fillIndexVector(indexesX, xDecode, binsX, coordinatesDelimeter);
            fillIndexVector(indexesY, yDecode, binsY, coordinatesDelimeter);
            fillAngleVector(indexesA, angleDecode, anglesBins, 2 * M_PI / anglesBins);
